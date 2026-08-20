@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "Nice-Scout",
+    "slug": "nice-scout",
+    "version": "0.5.0",
+    "description": "Scout Link player scouting app",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.andersah24.nicescout"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.andersah24.nicescout"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cc0d978c-d9f4-4958-9e9b-03ca9cadcda6"
+      }
+    },
+    "owner": "andersah24",
+    "updates": {
+      "url": "https://u.expo.dev/cc0d978c-d9f4-4958-9e9b-03ca9cadcda6"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}
