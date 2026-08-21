@@ -64,12 +64,9 @@ export default function PlayerDashboard() {
       <ImageBackground source={heroImage} style={styles.hero} imageStyle={styles.heroImage}>
         <View style={styles.heroShade} />
         <View style={styles.heroTop}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <View style={styles.liveBadge}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveBadgeText}>Profile live</Text>
-            </View>
-            <SocketStatusBadge compact />
+          <View style={styles.liveBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveBadgeText}>Profile live</Text>
           </View>
           <TouchableOpacity style={styles.heroIconButton} onPress={() => router.push('/Profile')}>
             <Ionicons name="person-outline" size={19} color="#FFFFFF" />

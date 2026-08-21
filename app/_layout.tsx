@@ -24,9 +24,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <SocketProvider>
-        <RootNavigator colorScheme={colorScheme} />
-      </SocketProvider>
+      <RootNavigator colorScheme={colorScheme} />
     </AuthProvider>
   );
 }
