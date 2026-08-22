@@ -19,10 +19,10 @@ export type SocketConnectionState =
 
 export type SocketMessage = {
   type: string;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
-export type SocketEventHandler = (payload: any) => void;
+export type SocketEventHandler = (payload: unknown) => void;
 
 type SocketContextValue = {
   status: SocketConnectionState;
@@ -30,7 +30,7 @@ type SocketContextValue = {
   clientId: string | null;
   serverTime: string | null;
   sendMessage: (message: SocketMessage) => boolean;
-  sendChatMessage: (conversationId: string, text: string, attachments?: any[], recipientId?: string) => boolean;
+  sendChatMessage: (conversationId: string, text: string, attachments?: unknown[], recipientId?: string) => boolean;
   sendTyping: (conversationId: string, isTyping: boolean) => void;
   subscribe: (room: string) => void;
   unsubscribe: (room: string) => void;
@@ -63,10 +63,10 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   const activeRoomsRef = useRef<Set<string>>(new Set());
   const maxReconnectAttempts = 10;
 
-  const emitLocalEvent = useCallback((event: string, payload: any) => {
+  const emitLocalEvent = useCallback((event: string, payload: unknown) => {
     const handlers = eventListenersRef.current.get(event);
     if (handlers) {
-      handlers.forEach((handler) => {
+      handlers.forEach((handler: SocketEventHandler) => {
         try {
           handler(payload);
         } catch (err) {
@@ -114,7 +114,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         }
 
         // Resubscribe to previously active rooms
-        activeRoomsRef.current.forEach((room) => {
+        activeRoomsRef.current.forEach((room: string) => {
           ws.send(JSON.stringify({ type: 'subscribe', room }));
         });
 

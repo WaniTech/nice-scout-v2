@@ -1,4 +1,3 @@
-import { SocketStatusBadge } from '@/components/SocketStatusBadge';
 import {
     colors,
     defaultPlayerProfile,
@@ -10,7 +9,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     ImageBackground,
     ScrollView,

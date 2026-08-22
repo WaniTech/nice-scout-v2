@@ -20,8 +20,8 @@ function connectRawWebSocket(port, path = '/ws') {
       },
     });
 
-    req.on('upgrade', (res, socket) => {
-      const client = new TestWebSocketClient(socket);
+    req.on('upgrade', (res, socket, head) => {
+      const client = new TestWebSocketClient(socket, head);
       resolve(client);
     });
 
@@ -31,9 +31,9 @@ function connectRawWebSocket(port, path = '/ws') {
 }
 
 class TestWebSocketClient {
-  constructor(socket) {
+  constructor(socket, head = Buffer.alloc(0)) {
     this.socket = socket;
-    this.buffer = Buffer.alloc(0);
+    this.buffer = head && head.length > 0 ? Buffer.from(head) : Buffer.alloc(0);
     this.queue = [];
     this.waiters = [];
 
@@ -41,6 +41,10 @@ class TestWebSocketClient {
       this.buffer = Buffer.concat([this.buffer, chunk]);
       this._drainFrames();
     });
+
+    if (this.buffer.length > 0) {
+      this._drainFrames();
+    }
   }
 
   _drainFrames() {
@@ -131,7 +135,10 @@ class TestWebSocketClient {
 }
 
 test('socket service connects and completes auth handshake', { timeout: 5000 }, async () => {
-  const store = { users: [] };
+  const store = {
+    users: [],
+    findUserById: () => null,
+  };
   const socketService = createSocketService({ store });
   const app = createApp({ store, socketService });
   const server = http.createServer(app);
@@ -169,7 +176,10 @@ test('socket service connects and completes auth handshake', { timeout: 5000 }, 
 });
 
 test('socket service handles room subscriptions and live chat message distribution', { timeout: 5000 }, async () => {
-  const store = { users: [] };
+  const store = {
+    users: [],
+    findUserById: () => null,
+  };
   const socketService = createSocketService({ store });
   const app = createApp({ store, socketService });
   const server = http.createServer(app);

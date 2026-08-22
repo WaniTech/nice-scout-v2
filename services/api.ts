@@ -1,9 +1,9 @@
 import {
-  Opportunity,
-  OpportunityStage,
-  PlayerClip,
-  PlayerClipStatus,
-  PlayerMessage,
+    Opportunity,
+    OpportunityStage,
+    PlayerClip,
+    PlayerClipStatus,
+    PlayerMessage,
 } from '@/constants/playerPlatform';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -182,5 +182,56 @@ export function updatePlayerClip(
 export function deletePlayerClip(playerId: string, clipId: string) {
   return request<void>(`/player/${playerId}/clips/${clipId}`, {
     method: 'DELETE',
+  });
+}
+
+export type MatchFilterWeights = {
+  positionWeight?: number;
+  tacticalWeight?: number;
+  locationWeight?: number;
+  financialWeight?: number;
+};
+
+export type PlayerMatchOpportunity = Opportunity & {
+  compatibilityScore: number;
+  fitBreakdown: {
+    positionalFit: number;
+    tacticalFit: number;
+    locationFit: number;
+    financialFit: number;
+    overallCompatibility: number;
+  };
+  reasons: string[];
+  isHighMatch: boolean;
+};
+
+export function fetchPlayerMatches(
+  profile: Partial<PlayerProfilePayload & { preferences?: PlayerPreferencesPayload }>,
+  options: {
+    minCompatibility?: number;
+    limit?: number;
+    weights?: MatchFilterWeights;
+  } = {}
+) {
+  return request<PlayerMatchOpportunity[]>('/player-match/match', {
+    method: 'POST',
+    body: JSON.stringify({
+      profile,
+      ...options,
+    }),
+  });
+}
+
+export function evaluateOpportunityCompatibility(
+  opportunityId: string,
+  profile: Partial<PlayerProfilePayload & { preferences?: PlayerPreferencesPayload }>,
+  weights?: MatchFilterWeights
+) {
+  return request<PlayerMatchOpportunity>(`/player-match/evaluate/${opportunityId}`, {
+    method: 'POST',
+    body: JSON.stringify({
+      profile,
+      weights,
+    }),
   });
 }

@@ -1,9 +1,9 @@
 module.exports = {
   extends: 'expo',
-  ignorePatterns: ['/dist/*'],
+  ignorePatterns: ['/dist/*', 'backend/**'],
   overrides: [
     {
-      files: ['backend/**/*.js', 'scripts/**/*.js'],
+      files: ['scripts/**/*.js'],
       env: {
         node: true,
       },

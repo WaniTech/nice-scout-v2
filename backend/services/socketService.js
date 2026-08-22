@@ -121,7 +121,6 @@ class WebSocketService extends EventEmitter {
       const firstByte = buffer[0];
       const secondByte = buffer[1];
 
-      const fin = (firstByte & 0x80) === 0x80;
       const opcode = firstByte & 0x0f;
       const masked = (secondByte & 0x80) === 0x80;
       let payloadLength = secondByte & 0x7f;

@@ -1,4 +1,5 @@
 import { SocketConnectionState, useSocket } from '@/contexts/SocketContext';
+import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Props = {
