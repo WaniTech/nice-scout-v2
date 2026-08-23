@@ -26,6 +26,7 @@ Right now you can use the app to:
 - **Real-Time Gateway & WebSocket Subsystem**: Lightweight RFC 6455 WebSocket server with authenticated handshakes, room routing (`user:<id>`, `chat:<id>`, `global`), heartbeat monitoring, and live messaging support.
 - **Client Socket Lifecycle & Real-Time Sync Engine**: React Native `SocketContext` provider with auto-reconnection on network/app focus events, live `SocketStatusBadge` indicator, and real-time event subscription hooks.
 - **Multi-Criteria Player-Club Matching Engine**: Algorithmic fit calculator evaluating tactical requirements, positional versatility, geographic preferences, and compensation targets with interactive threshold filters in `app/PlayerMatch.tsx`.
+- **Live Scout Chat & Direct Negotiation Channel**: Upgraded `app/MessageDetail.tsx` with instant WebSocket message dispatch, live typing indicators, and quick attachment drawers for video clips and availability windows.
 
 ## Work Hours
 

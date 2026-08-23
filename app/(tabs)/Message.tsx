@@ -1,3 +1,4 @@
+import { SocketStatusBadge } from '@/components/SocketStatusBadge';
 import { colors, messages, opportunities } from '@/constants/playerPlatform';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -38,7 +39,10 @@ export default function MessagePage() {
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.kicker}>Recruitment inbox</Text>
+            <View style={styles.topRow}>
+              <Text style={styles.kicker}>Recruitment inbox</Text>
+              <SocketStatusBadge compact />
+            </View>
             <Text style={styles.title}>Club messages</Text>
             <Text style={styles.subtitle}>
               Follow up quickly when scouts ask for clips, data, or trial dates.
@@ -109,12 +113,17 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 10,
   },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 7,
+  },
   kicker: {
     color: colors.accent,
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
-    marginBottom: 7,
   },
   title: {
     color: colors.ink,
