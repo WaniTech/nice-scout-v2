@@ -5,7 +5,7 @@ import { useSocket } from '@/contexts/SocketContext';
 import { archiveMessage, createMessageReply } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -71,7 +71,7 @@ export default function MessageDetail() {
         timestamp?: string;
       };
       if (data && data.conversationId === message.id) {
-        setChatHistory((prev) => [
+        setChatHistory((prev: ChatBubble[]) => [
           ...prev,
           {
             id: `live-${Date.now()}`,
@@ -133,7 +133,7 @@ export default function MessageDetail() {
         sentAttachments,
       );
 
-      setChatHistory((prev) => [
+      setChatHistory((prev: ChatBubble[]) => [
         ...prev,
         {
           id: `player-${Date.now()}`,
@@ -159,11 +159,11 @@ export default function MessageDetail() {
   }, [inputText, attachments, message, currentUser, sendChatMessage]);
 
   const toggleAttachment = (attachment: string, label: string) => {
-    setAttachments((prev) => {
+    setAttachments((prev: string[]) => {
       const exists = prev.includes(attachment);
       if (exists) {
         setNotice(`Removed ${label}.`);
-        return prev.filter((a) => a !== attachment);
+        return prev.filter((a: string) => a !== attachment);
       } else {
         setNotice(`Added ${label} to next message.`);
         return [...prev, attachment];
@@ -234,7 +234,7 @@ export default function MessageDetail() {
               <Ionicons name="chevron-forward" size={16} color={colors.muted} />
             </View>
             <Text style={styles.contextClub}>{opportunity.club}</Text>
-            <Text style={styles.contextRole}>{opportunity.position} • {opportunity.location}</Text>
+            <Text style={styles.contextRole}>{opportunity.position} • {opportunity.city}, {opportunity.country}</Text>
             <View style={styles.contextMetaRow}>
               <View style={styles.contextMeta}>
                 <Text style={styles.contextMetaValue}>{opportunity.fit}%</Text>
@@ -249,7 +249,7 @@ export default function MessageDetail() {
         ) : null}
 
         <View style={styles.threadContainer}>
-          {chatHistory.map((bubble) => {
+          {chatHistory.map((bubble: ChatBubble) => {
             const isPlayer = bubble.senderRole === 'player';
             return (
               <View
