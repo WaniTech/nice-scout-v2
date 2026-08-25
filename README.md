@@ -28,6 +28,7 @@ Right now you can use the app to:
 - **Multi-Criteria Player-Club Matching Engine**: Algorithmic fit calculator evaluating tactical requirements, positional versatility, geographic preferences, and compensation targets with interactive threshold filters in `app/PlayerMatch.tsx`.
 - **Live Scout Chat & Direct Negotiation Channel**: Upgraded `app/MessageDetail.tsx` with instant WebSocket message dispatch, live typing indicators, and quick attachment drawers for video clips and availability windows.
 - **Trial Application Pipeline & Recruitment Lifecycle Tracker**: Interactive scouting pipeline in `app/(tabs)/Myjobs.tsx` and `app/JobDetail.tsx` with multi-stage status management (Saved, Applied, Trial Booked, Offer Talks), urgency indicators, and recruitment milestone tracking.
+- **Scout Video Reel & Performance Media Portfolio**: Dedicated recruitment video asset manager in `app/(tabs)/MediaRoom.tsx` with pipeline status tracking (`Draft`, `Scout-ready`, `Sent`), scout view metrics, tagging taxonomy, and REST API sync.
 
 ## Work Hours
 

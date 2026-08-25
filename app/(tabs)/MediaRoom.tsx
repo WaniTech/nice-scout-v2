@@ -1,24 +1,31 @@
 import { colors, mediaClips, PlayerClip, PlayerClipStatus } from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  createPlayerClip,
-  deletePlayerClip,
-  getPlayerClips,
-  PlayerClipPayload,
-  updatePlayerClip,
+    createPlayerClip,
+    deletePlayerClip,
+    getPlayerClips,
+    PlayerClipPayload,
+    updatePlayerClip,
 } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const statusOptions: PlayerClipStatus[] = ['Draft', 'Scout-ready', 'Sent'];
+const filterOptions: ('All' | PlayerClipStatus)[] = ['All', 'Scout-ready', 'Sent', 'Draft'];
+
+const clipStatusBadgeColors: Record<PlayerClipStatus, { bg: string; text: string }> = {
+  Draft: { bg: '#F1F4F0', text: '#5E6B5D' },
+  'Scout-ready': { bg: '#DCFCE7', text: '#15803D' },
+  Sent: { bg: '#EFF6FF', text: '#2563EB' },
+};
 
 const emptyForm: PlayerClipPayload = {
   title: '',
@@ -40,14 +47,31 @@ export default function MediaRoomPage() {
   const [editingClipId, setEditingClipId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('1v1, pressing');
   const [syncNotice, setSyncNotice] = useState('');
+  const [activeFilter, setActiveFilter] = useState<('All' | PlayerClipStatus)>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const playerId = currentUser?.id ?? 'demo-player';
   const stats = useMemo(() => {
     const totalViews = clips.reduce((sum, clip) => sum + clip.views, 0);
     const scoutReady = clips.filter((clip) => clip.status === 'Scout-ready').length;
     const sent = clips.filter((clip) => clip.status === 'Sent').length;
-    return { totalViews, scoutReady, sent };
+    const draft = clips.filter((clip) => clip.status === 'Draft').length;
+    return { totalViews, scoutReady, sent, draft };
   }, [clips]);
+
+  const filteredClips = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return clips.filter((clip) => {
+      const matchesFilter = activeFilter === 'All' || clip.status === activeFilter;
+      const matchesQuery =
+        !q ||
+        [clip.title, clip.focus, clip.opponent, clip.type, clip.tags.join(' ')]
+          .join(' ')
+          .toLowerCase()
+          .includes(q);
+      return matchesFilter && matchesQuery;
+    });
+  }, [clips, activeFilter, searchQuery]);
 
   useEffect(() => {
     let ignore = false;
@@ -197,11 +221,68 @@ export default function MediaRoomPage() {
       </View>
 
       <View style={styles.summaryRow}>
-        <SummaryCard value={clips.length.toString()} label="Clips" />
-        <SummaryCard value={stats.scoutReady.toString()} label="Ready" />
-        <SummaryCard value={stats.sent.toString()} label="Sent" />
-        <SummaryCard value={stats.totalViews.toString()} label="Views" />
+        <TouchableOpacity
+          style={[styles.summaryCard, activeFilter === 'All' && styles.summaryCardActive]}
+          onPress={() => setActiveFilter('All')}
+        >
+          <Text style={styles.summaryValue}>{clips.length}</Text>
+          <Text style={styles.summaryLabel}>Total Clips</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.summaryCard, activeFilter === 'Scout-ready' && styles.summaryCardActive]}
+          onPress={() => setActiveFilter(activeFilter === 'Scout-ready' ? 'All' : 'Scout-ready')}
+        >
+          <Text style={styles.summaryValue}>{stats.scoutReady}</Text>
+          <Text style={styles.summaryLabel}>Scout-Ready</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.summaryCard, activeFilter === 'Sent' && styles.summaryCardActive]}
+          onPress={() => setActiveFilter(activeFilter === 'Sent' ? 'All' : 'Sent')}
+        >
+          <Text style={styles.summaryValue}>{stats.sent}</Text>
+          <Text style={styles.summaryLabel}>Sent</Text>
+        </TouchableOpacity>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryValue}>{stats.totalViews}</Text>
+          <Text style={styles.summaryLabel}>Scout Views</Text>
+        </View>
       </View>
+
+      <View style={styles.searchShell}>
+        <Ionicons name="search-outline" size={18} color={colors.muted} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Filter clips by skill, opponent, or tags..."
+          placeholderTextColor="#899188"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterRow}
+      >
+        {filterOptions.map((filter) => {
+          const selected = filter === activeFilter;
+          const count =
+            filter === 'All'
+              ? clips.length
+              : clips.filter((c) => c.status === filter).length;
+          return (
+            <TouchableOpacity
+              key={filter}
+              style={[styles.filterChip, selected && styles.filterChipActive]}
+              onPress={() => setActiveFilter(filter)}
+            >
+              <Text style={[styles.filterText, selected && styles.filterTextActive]}>
+                {filter} ({count})
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
       <View style={styles.pipelineCard}>
         <View style={styles.pipelineHeader}>
@@ -288,55 +369,76 @@ export default function MediaRoomPage() {
       </View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Clip library</Text>
+        <Text style={styles.sectionTitle}>Clip library ({filteredClips.length})</Text>
       </View>
 
-      {clips.map((clip) => (
-        <View key={clip.id} style={styles.clipCard}>
-          <View style={styles.clipTop}>
-            <View style={styles.thumbnail}>
-              <Ionicons name="play" size={22} color="#FFFFFF" />
+      {filteredClips.map((clip) => {
+        const badgeColor = clipStatusBadgeColors[clip.status] || clipStatusBadgeColors.Draft;
+        return (
+          <View key={clip.id} style={styles.clipCard}>
+            <View style={styles.clipTop}>
+              <View style={styles.thumbnail}>
+                <Ionicons name="play" size={22} color="#FFFFFF" />
+              </View>
+              <View style={styles.clipCopy}>
+                <Text style={styles.clipTitle}>{clip.title}</Text>
+                <Text style={styles.clipMeta}>
+                  {clip.type} • {clip.duration} • {clip.views} views
+                </Text>
+              </View>
+              <View style={[styles.clipStatus, { backgroundColor: badgeColor.bg }]}>
+                <Text style={[styles.clipStatusText, { color: badgeColor.text }]}>{clip.status}</Text>
+              </View>
             </View>
-            <View style={styles.clipCopy}>
-              <Text style={styles.clipTitle}>{clip.title}</Text>
-              <Text style={styles.clipMeta}>
-                {clip.type} | {clip.duration} | {clip.views} views
-              </Text>
+
+            <Text style={styles.clipFocus}>{clip.focus}</Text>
+            {clip.opponent ? (
+              <Text style={styles.clipOpponent}>Opponent: {clip.opponent} ({clip.date})</Text>
+            ) : null}
+            {clip.notes ? <Text style={styles.clipNotes}>{clip.notes}</Text> : null}
+
+            <View style={styles.tagRow}>
+              {clip.tags.map((tag) => (
+                <Text key={`${clip.id}-${tag}`} style={styles.tag}>
+                  {tag}
+                </Text>
+              ))}
             </View>
-            <View style={styles.clipStatus}>
-              <Text style={styles.clipStatusText}>{clip.status}</Text>
+
+            <View style={styles.actionRow}>
+              <TouchableOpacity style={styles.smallAction} onPress={() => handleEdit(clip)}>
+                <Ionicons name="create-outline" size={16} color={colors.primary} />
+                <Text style={styles.smallActionText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.smallAction}
+                onPress={() => handleStatusChange(clip, clip.status === 'Sent' ? 'Scout-ready' : 'Sent')}
+              >
+                <Ionicons name="send-outline" size={16} color={colors.primary} />
+                <Text style={styles.smallActionText}>{clip.status === 'Sent' ? 'Ready' : 'Send to Scout'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.smallAction}
+                onPress={() => setSyncNotice(`Share link copied: nicescout.app/clips/${clip.id}`)}
+              >
+                <Ionicons name="share-outline" size={16} color={colors.primary} />
+                <Text style={styles.smallActionText}>Share</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.deleteAction} onPress={() => handleDelete(clip.id)}>
+                <Ionicons name="trash-outline" size={16} color={colors.red} />
+              </TouchableOpacity>
             </View>
           </View>
+        );
+      })}
 
-          <Text style={styles.clipFocus}>{clip.focus}</Text>
-          <Text style={styles.clipNotes}>{clip.notes}</Text>
-
-          <View style={styles.tagRow}>
-            {clip.tags.map((tag) => (
-              <Text key={`${clip.id}-${tag}`} style={styles.tag}>
-                {tag}
-              </Text>
-            ))}
-          </View>
-
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.smallAction} onPress={() => handleEdit(clip)}>
-              <Ionicons name="create-outline" size={17} color={colors.primary} />
-              <Text style={styles.smallActionText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.smallAction}
-              onPress={() => handleStatusChange(clip, clip.status === 'Sent' ? 'Scout-ready' : 'Sent')}
-            >
-              <Ionicons name="send-outline" size={17} color={colors.primary} />
-              <Text style={styles.smallActionText}>{clip.status === 'Sent' ? 'Ready' : 'Send'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.deleteAction} onPress={() => handleDelete(clip.id)}>
-              <Ionicons name="trash-outline" size={17} color={colors.red} />
-            </TouchableOpacity>
-          </View>
+      {filteredClips.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="videocam-off-outline" size={32} color={colors.muted} />
+          <Text style={styles.emptyTitle}>No clips found</Text>
+          <Text style={styles.emptyText}>Try selecting another status filter or change your search query.</Text>
         </View>
-      ))}
+      ) : null}
     </ScrollView>
   );
 }
@@ -421,6 +523,10 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: 'center',
   },
+  summaryCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: '#F0FDF4',
+  },
   summaryValue: {
     color: colors.ink,
     fontSize: 21,
@@ -431,6 +537,50 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     marginTop: 3,
+  },
+  searchShell: {
+    minHeight: 48,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 12,
+  },
+  searchInput: {
+    flex: 1,
+    color: colors.ink,
+    fontSize: 14,
+    paddingVertical: 10,
+  },
+  filterRow: {
+    gap: 8,
+    paddingVertical: 12,
+  },
+  filterChip: {
+    minHeight: 36,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  filterChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  filterText: {
+    color: colors.muted,
+    fontWeight: '900',
+    fontSize: 12,
+  },
+  filterTextActive: {
+    color: '#FFFFFF',
   },
   pipelineCard: {
     marginTop: 12,
@@ -647,6 +797,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 12,
   },
+  clipOpponent: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 4,
+  },
   clipNotes: {
     color: colors.muted,
     fontSize: 13,
@@ -698,5 +854,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 'auto',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 36,
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.ink,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: colors.muted,
   },
 });
