@@ -143,6 +143,7 @@ export function subscribeSyncQueue(listener: SyncQueueListener) {
   };
 }
 
+// Queue replay is not available in this API client yet; this keeps UI callers type-safe.
 export function syncQueuedMutationsNow(): SyncQueueSnapshot {
   return getSyncQueueSnapshot();
 }
