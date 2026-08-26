@@ -143,7 +143,7 @@ export function subscribeSyncQueue(listener: SyncQueueListener) {
   };
 }
 
-export async function syncQueuedMutationsNow(): Promise<SyncQueueSnapshot> {
+export function syncQueuedMutationsNow(): SyncQueueSnapshot {
   return getSyncQueueSnapshot();
 }
 
