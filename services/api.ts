@@ -82,11 +82,6 @@ const syncQueueSnapshot: SyncQueueSnapshot = {
 
 const syncQueueListeners = new Set<SyncQueueListener>();
 
-function emitSyncQueueSnapshot() {
-  const snapshot = { ...syncQueueSnapshot };
-  syncQueueListeners.forEach((listener) => listener(snapshot));
-}
-
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -149,11 +144,6 @@ export function subscribeSyncQueue(listener: SyncQueueListener) {
 }
 
 export async function syncQueuedMutationsNow(): Promise<SyncQueueSnapshot> {
-  syncQueueSnapshot.status = 'replaying';
-  emitSyncQueueSnapshot();
-  await Promise.resolve();
-  syncQueueSnapshot.status = 'idle';
-  emitSyncQueueSnapshot();
   return getSyncQueueSnapshot();
 }
 
