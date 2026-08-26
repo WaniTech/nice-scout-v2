@@ -127,10 +127,10 @@ export function SocketProvider({ children }: { children: ReactNode }) {
           const { type, ...payload } = data;
 
           if (type === 'connection_established') {
-            setClientId(payload.clientId || null);
-            setServerTime(payload.serverTime || null);
+            setClientId(typeof payload.clientId === 'string' ? payload.clientId : null);
+            setServerTime(typeof payload.serverTime === 'string' ? payload.serverTime : null);
           } else if (type === 'auth_success') {
-            setServerTime(payload.serverTime || null);
+            setServerTime(typeof payload.serverTime === 'string' ? payload.serverTime : null);
           }
 
           emitLocalEvent(type, payload);

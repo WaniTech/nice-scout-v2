@@ -66,6 +66,27 @@ export type PlayerClipPayload = {
   attachedToOpportunityId?: string;
 };
 
+export type SyncQueueStatus = 'idle' | 'replaying';
+
+export type SyncQueueSnapshot = {
+  queuedCount: number;
+  status: SyncQueueStatus;
+};
+
+type SyncQueueListener = (snapshot: SyncQueueSnapshot) => void;
+
+const syncQueueSnapshot: SyncQueueSnapshot = {
+  queuedCount: 0,
+  status: 'idle',
+};
+
+const syncQueueListeners = new Set<SyncQueueListener>();
+
+function emitSyncQueueSnapshot() {
+  const snapshot = { ...syncQueueSnapshot };
+  syncQueueListeners.forEach((listener) => listener(snapshot));
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -113,6 +134,27 @@ export function deleteApplication(playerId: string, applicationId: string) {
   return request<void>(`/player/${playerId}/applications/${applicationId}`, {
     method: 'DELETE',
   });
+}
+
+export function getSyncQueueSnapshot(): SyncQueueSnapshot {
+  return { ...syncQueueSnapshot };
+}
+
+export function subscribeSyncQueue(listener: SyncQueueListener) {
+  syncQueueListeners.add(listener);
+  listener(getSyncQueueSnapshot());
+  return () => {
+    syncQueueListeners.delete(listener);
+  };
+}
+
+export async function syncQueuedMutationsNow(): Promise<SyncQueueSnapshot> {
+  syncQueueSnapshot.status = 'replaying';
+  emitSyncQueueSnapshot();
+  await Promise.resolve();
+  syncQueueSnapshot.status = 'idle';
+  emitSyncQueueSnapshot();
+  return getSyncQueueSnapshot();
 }
 
 export function updatePlayerProfile(playerId: string, payload: PlayerProfilePayload) {
