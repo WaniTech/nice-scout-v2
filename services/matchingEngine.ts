@@ -177,7 +177,7 @@ export function evaluatePlayerMatch(
   const financialResult = calculateFinancialScore(
     player.preferences?.contractType,
     player.preferences?.minimumPackage,
-    opportunity.salary || opportunity.package
+    opportunity.compensation
   );
 
   const compositeFit = Math.round(
