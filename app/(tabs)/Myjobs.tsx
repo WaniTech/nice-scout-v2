@@ -2,10 +2,13 @@ import { colors, opportunities, OpportunityStage } from '@/constants/playerPlatf
 import { useAuth } from '@/contexts/AuthContext';
 import {
   deleteApplication,
+  getSyncQueueSnapshot,
   getOpportunities,
   getPlayerApplications,
   PlayerApplication,
   saveApplication,
+  subscribeSyncQueue,
+  syncQueuedMutationsNow,
   updateApplicationStage,
 } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,9 +41,28 @@ export default function TrialsPage() {
   const [boardOpportunities, setBoardOpportunities] = useState(opportunities);
   const [applications, setApplications] = useState<PlayerApplication[]>([]);
   const [syncNotice, setSyncNotice] = useState('');
+  const [queuedChanges, setQueuedChanges] = useState(0);
   const [stages, setStages] = useState<Record<string, OpportunityStage>>(
     Object.fromEntries(opportunities.map((opportunity) => [opportunity.id, opportunity.stage])),
   );
+
+  useEffect(() => {
+    return subscribeSyncQueue((snapshot) => {
+      setQueuedChanges(snapshot.queuedCount);
+
+      if (snapshot.status === 'replaying' && snapshot.queuedCount > 0) {
+        setSyncNotice(`Syncing queued updates (${snapshot.queuedCount})...`);
+      }
+
+      if (snapshot.status === 'idle' && snapshot.queuedCount === 0) {
+        setSyncNotice((previous) =>
+          previous.includes('queued') || previous.includes('Syncing queued')
+            ? 'All queued updates synced.'
+            : previous,
+        );
+      }
+    });
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -68,6 +90,7 @@ export default function TrialsPage() {
         setApplications(remoteApplications);
         setStages(remoteStages);
         setSyncNotice('Pipeline synchronized with API');
+        void syncQueuedMutationsNow();
       } catch {
         if (!ignore) {
           setSyncNotice('Using local demo data while API is unavailable');
@@ -127,7 +150,12 @@ export default function TrialsPage() {
         setApplications((previousApplications) =>
           previousApplications.filter((application) => application.id !== existingApplication.id),
         );
-        setSyncNotice('Opportunity removed from your pipeline');
+        const queueSnapshot = getSyncQueueSnapshot();
+        if (queueSnapshot.queuedCount > 0) {
+          setSyncNotice(`Offline mode: ${queueSnapshot.queuedCount} change(s) queued for sync.`);
+        } else {
+          setSyncNotice('Opportunity removed from your pipeline');
+        }
         return;
       }
 
@@ -143,7 +171,12 @@ export default function TrialsPage() {
         setApplications((previousApplications) => [...previousApplications, createdApplication]);
       }
 
-      setSyncNotice(`Moved to "${nextStage}"`);
+      const queueSnapshot = getSyncQueueSnapshot();
+      if (queueSnapshot.queuedCount > 0) {
+        setSyncNotice(`Offline mode: ${queueSnapshot.queuedCount} change(s) queued for sync.`);
+      } else {
+        setSyncNotice(`Moved to "${nextStage}"`);
+      }
     } catch {
       setStages((previousStages) => ({ ...previousStages, [id]: previousStage }));
       setSyncNotice('Could not sync stage update. Try again when API is reachable.');
@@ -239,7 +272,9 @@ export default function TrialsPage() {
       {syncNotice ? (
         <View style={styles.syncNotice}>
           <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
-          <Text style={styles.syncNoticeText}>{syncNotice}</Text>
+          <Text style={styles.syncNoticeText}>
+            {queuedChanges > 0 ? `${syncNotice} (${queuedChanges} queued)` : syncNotice}
+          </Text>
         </View>
       ) : null}
 
@@ -619,294 +654,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 13,
     color: colors.muted,
-  },
-});
-        <View style={styles.emptyState}>
-          <Ionicons name="file-tray-outline" size={30} color={colors.muted} />
-          <Text style={styles.emptyTitle}>No opportunities here</Text>
-          <Text style={styles.emptyText}>Change the filter or search for another market.</Text>
-        </View>
-      ) : null}
-    </ScrollView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 58,
-    paddingBottom: 102,
-  },
-  header: {
-    marginBottom: 18,
-  },
-  kicker: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    marginBottom: 7,
-  },
-  title: {
-    color: colors.ink,
-    fontSize: 34,
-    lineHeight: 38,
-    fontWeight: '900',
-  },
-  subtitle: {
-    color: colors.muted,
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 8,
-  },
-  searchShell: {
-    minHeight: 50,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    color: colors.ink,
-    fontSize: 15,
-    paddingVertical: 10,
-  },
-  filterRow: {
-    gap: 8,
-    paddingVertical: 14,
-  },
-  filterChip: {
-    minHeight: 38,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  filterChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  filterText: {
-    color: colors.muted,
-    fontWeight: '900',
-    fontSize: 13,
-  },
-  filterTextActive: {
-    color: '#FFFFFF',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 4,
-  },
-  summaryItem: {
-    flex: 1,
-    minHeight: 76,
-    borderRadius: 8,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 12,
-    justifyContent: 'center',
-  },
-  summaryValue: {
-    color: colors.ink,
-    fontSize: 22,
-    fontWeight: '900',
-  },
-  summaryLabel: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: '800',
-    marginTop: 2,
-  },
-  syncNotice: {
-    minHeight: 38,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceAlt,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    marginTop: 10,
-  },
-  syncNoticeText: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  opportunityCard: {
-    marginTop: 12,
-    borderRadius: 8,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 16,
-  },
-  cardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  clubMark: {
-    width: 46,
-    height: 46,
-    borderRadius: 8,
-    backgroundColor: colors.primaryDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  clubMarkText: {
-    color: colors.accent,
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  cardTitleArea: {
-    flex: 1,
-  },
-  club: {
-    color: colors.ink,
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  role: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  fitPill: {
-    minWidth: 58,
-    borderRadius: 8,
-    backgroundColor: '#F7F2E6',
-    borderWidth: 1,
-    borderColor: '#E4D4AD',
-    alignItems: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 8,
-  },
-  fitValue: {
-    color: colors.accent,
-    fontWeight: '900',
-    fontSize: 16,
-  },
-  fitLabel: {
-    color: colors.accent,
-    fontWeight: '800',
-    fontSize: 10,
-    textTransform: 'uppercase',
-  },
-  description: {
-    color: colors.muted,
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 14,
-  },
-  detailGrid: {
-    gap: 9,
-    marginTop: 14,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  detailText: {
-    flex: 1,
-    color: colors.ink,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  cardFooter: {
-    marginTop: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  stageBadge: {
-    minHeight: 34,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceAlt,
-    paddingHorizontal: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stageText: {
-    color: colors.primary,
-    fontWeight: '900',
-    fontSize: 12,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  iconAction: {
-    width: 42,
-    height: 42,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  iconActionActive: {
-    backgroundColor: colors.primary,
-  },
-  applyButton: {
-    minHeight: 42,
-    minWidth: 92,
-    borderRadius: 8,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  appliedButton: {
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  applyButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  appliedButtonText: {
-    color: colors.primary,
-  },
-  emptyState: {
-    marginTop: 16,
-    padding: 24,
-    borderRadius: 8,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  emptyTitle: {
-    color: colors.ink,
-    fontWeight: '900',
-    fontSize: 17,
-    marginTop: 10,
-  },
-  emptyText: {
-    color: colors.muted,
-    marginTop: 4,
-    textAlign: 'center',
   },
 });
