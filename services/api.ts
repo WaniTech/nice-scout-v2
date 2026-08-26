@@ -71,6 +71,7 @@ export type SyncQueueStatus = 'idle' | 'replaying';
 export type SyncQueueSnapshot = {
   queuedCount: number;
   status: SyncQueueStatus;
+  replayed: boolean;
 };
 
 type SyncQueueListener = (snapshot: SyncQueueSnapshot) => void;
@@ -78,6 +79,7 @@ type SyncQueueListener = (snapshot: SyncQueueSnapshot) => void;
 const syncQueueSnapshot: SyncQueueSnapshot = {
   queuedCount: 0,
   status: 'idle',
+  replayed: false,
 };
 
 const syncQueueListeners = new Set<SyncQueueListener>();
