@@ -1,12 +1,189 @@
 import {
-    Opportunity,
-    OpportunityStage,
-    PlayerClip,
-    PlayerClipStatus,
-    PlayerMessage,
+  Opportunity,
+  OpportunityStage,
+  PlayerClip,
+  PlayerClipStatus,
+  PlayerMessage,
 } from '@/constants/playerPlatform';
 
 const API_BASE_URL = 'http://localhost:5000/api';
+
+export type SyncQueueStatus = 'idle' | 'syncing' | 'queued' | 'replaying' | 'error';
+
+export type SyncQueueSnapshot = {
+  status: SyncQueueStatus;
+  queuedCount: number;
+  lastError?: string;
+};
+
+type QueueEntry = {
+  id: string;
+  execute: () => Promise<void>;
+  retries: number;
+};
+
+const queueListeners = new Set<(snapshot: SyncQueueSnapshot) => void>();
+const mutationQueue: QueueEntry[] = [];
+let queueProcessing = false;
+let queueIdCounter = 0;
+
+let queueSnapshot: SyncQueueSnapshot = {
+  status: 'idle',
+  queuedCount: 0,
+};
+
+function emitQueueSnapshot(next: Partial<SyncQueueSnapshot>) {
+  queueSnapshot = {
+    ...queueSnapshot,
+    ...next,
+    queuedCount: mutationQueue.length,
+  };
+
+  for (const listener of queueListeners) {
+    listener(queueSnapshot);
+  }
+}
+
+export function getSyncQueueSnapshot(): SyncQueueSnapshot {
+  return queueSnapshot;
+}
+
+export function subscribeSyncQueue(listener: (snapshot: SyncQueueSnapshot) => void) {
+  queueListeners.add(listener);
+  listener(queueSnapshot);
+
+  return () => {
+    queueListeners.delete(listener);
+  };
+}
+
+function isNetworkError(error: unknown) {
+  if (error instanceof TypeError) {
+    return true;
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return (
+    message.includes('failed to fetch') ||
+    message.includes('network') ||
+    message.includes('timed out')
+  );
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function requestWithRetry<T>(
+  path: string,
+  options: RequestInit,
+  retries = 2,
+  baseDelayMs = 250,
+): Promise<T> {
+  let attempt = 0;
+
+  while (true) {
+    try {
+      return await request<T>(path, options);
+    } catch (error) {
+      if (!isNetworkError(error) || attempt >= retries) {
+        throw error;
+      }
+
+      const waitMs = baseDelayMs * 2 ** attempt;
+      attempt += 1;
+      await delay(waitMs);
+    }
+  }
+}
+
+function enqueueMutation(path: string, options: RequestInit) {
+  const normalizedOptions: RequestInit = {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+    },
+  };
+
+  queueIdCounter += 1;
+  mutationQueue.push({
+    id: `queued-${queueIdCounter}`,
+    retries: 0,
+    execute: () => requestWithRetry<void>(path, normalizedOptions, 2, 350),
+  });
+
+  emitQueueSnapshot({
+    status: 'queued',
+    lastError: undefined,
+  });
+
+  void flushSyncQueue();
+}
+
+export async function flushSyncQueue() {
+  if (queueProcessing || mutationQueue.length === 0) {
+    return;
+  }
+
+  queueProcessing = true;
+
+  try {
+    emitQueueSnapshot({ status: 'replaying', lastError: undefined });
+
+    while (mutationQueue.length > 0) {
+      const current = mutationQueue[0];
+
+      try {
+        await current.execute();
+        mutationQueue.shift();
+        emitQueueSnapshot({
+          status: mutationQueue.length > 0 ? 'replaying' : 'idle',
+          lastError: undefined,
+        });
+      } catch (error) {
+        if (isNetworkError(error) && current.retries < 3) {
+          current.retries += 1;
+          await delay(300 * 2 ** current.retries);
+          continue;
+        }
+
+        emitQueueSnapshot({
+          status: 'error',
+          lastError: error instanceof Error ? error.message : 'Queue replay failed',
+        });
+        break;
+      }
+    }
+  } finally {
+    queueProcessing = false;
+  }
+}
+
+async function mutationRequestOrQueue<T>(
+  path: string,
+  options: RequestInit,
+  fallbackFactory: () => T,
+): Promise<T> {
+  emitQueueSnapshot({ status: 'syncing', lastError: undefined });
+
+  try {
+    const result = await requestWithRetry<T>(path, options, 1, 250);
+    emitQueueSnapshot({ status: mutationQueue.length > 0 ? 'queued' : 'idle' });
+    return result;
+  } catch (error) {
+    if (!isNetworkError(error)) {
+      emitQueueSnapshot({ status: 'error', lastError: error instanceof Error ? error.message : 'Sync failed' });
+      throw error;
+    }
+
+    enqueueMutation(path, options);
+    return fallbackFactory();
+  }
+}
 
 export type PlayerApplication = {
   id: string;
@@ -96,23 +273,51 @@ export function getPlayerApplications(playerId: string) {
 }
 
 export function saveApplication(playerId: string, opportunityId: string, stage: OpportunityStage) {
-  return request<PlayerApplication>(`/player/${playerId}/applications`, {
+  return mutationRequestOrQueue<PlayerApplication>(`/player/${playerId}/applications`, {
     method: 'POST',
     body: JSON.stringify({ opportunityId, stage }),
+  }, () => {
+    const now = new Date().toISOString();
+    return {
+      id: `queued-${playerId}-${opportunityId}-${Date.now()}`,
+      playerId,
+      opportunityId,
+      stage,
+      notes: '[queued] pending sync',
+      createdAt: now,
+      updatedAt: now,
+      opportunity: null,
+    };
   });
 }
 
 export function updateApplicationStage(playerId: string, applicationId: string, stage: OpportunityStage) {
-  return request<PlayerApplication>(`/player/${playerId}/applications/${applicationId}`, {
+  return mutationRequestOrQueue<PlayerApplication>(`/player/${playerId}/applications/${applicationId}`, {
     method: 'PATCH',
     body: JSON.stringify({ stage }),
+  }, () => {
+    const now = new Date().toISOString();
+    return {
+      id: applicationId,
+      playerId,
+      opportunityId: '',
+      stage,
+      notes: '[queued] pending sync',
+      createdAt: now,
+      updatedAt: now,
+      opportunity: null,
+    };
   });
 }
 
 export function deleteApplication(playerId: string, applicationId: string) {
-  return request<void>(`/player/${playerId}/applications/${applicationId}`, {
+  return mutationRequestOrQueue<void>(`/player/${playerId}/applications/${applicationId}`, {
     method: 'DELETE',
-  });
+  }, () => undefined);
+}
+
+export function syncQueuedMutationsNow() {
+  return flushSyncQueue();
 }
 
 export function updatePlayerProfile(playerId: string, payload: PlayerProfilePayload) {

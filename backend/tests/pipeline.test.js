@@ -176,3 +176,81 @@ test('filters opportunities by query keyword and returns opportunities list', as
     await close();
   }
 });
+
+test('rejects invalid stage updates and preserves previous pipeline state', async () => {
+  const store = createTestStore({
+    applications: [
+      {
+        id: 'app-stability',
+        playerId: 'demo-player',
+        opportunityId: 'opp-2',
+        stage: 'Applied',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ],
+  });
+
+  const { baseUrl, close } = await startTestApp(store);
+
+  try {
+    const invalidPatch = await fetch(`${baseUrl}/player/demo-player/applications/app-stability`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage: 'Unknown Stage' }),
+    });
+
+    assert.equal(invalidPatch.status, 400);
+
+    const listRes = await fetch(`${baseUrl}/player/demo-player/applications`);
+    assert.equal(listRes.status, 200);
+    const list = await listRes.json();
+    assert.equal(list.length, 1);
+    assert.equal(list[0].stage, 'Applied');
+  } finally {
+    await close();
+  }
+});
+
+test('keeps last valid stage after repeated stage transitions', async () => {
+  const store = createTestStore({
+    applications: [
+      {
+        id: 'app-repeat',
+        playerId: 'demo-player',
+        opportunityId: 'opp-1',
+        stage: 'Saved',
+        notes: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ],
+  });
+
+  const { baseUrl, close } = await startTestApp(store);
+
+  try {
+    const transitions = ['Applied', 'Trial booked', 'Offer talks'];
+
+    for (const stage of transitions) {
+      const patchRes = await fetch(`${baseUrl}/player/demo-player/applications/app-repeat`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage }),
+      });
+
+      assert.equal(patchRes.status, 200);
+      const patched = await patchRes.json();
+      assert.equal(patched.stage, stage);
+    }
+
+    const listRes = await fetch(`${baseUrl}/player/demo-player/applications`);
+    assert.equal(listRes.status, 200);
+    const list = await listRes.json();
+    assert.equal(list.length, 1);
+    assert.equal(list[0].stage, 'Offer talks');
+  } finally {
+    await close();
+  }
+});
