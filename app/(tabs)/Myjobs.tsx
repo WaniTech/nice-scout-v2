@@ -1,23 +1,23 @@
 import { colors, opportunities, OpportunityStage } from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  deleteApplication,
-  getOpportunities,
-  getPlayerApplications,
-  PlayerApplication,
-  saveApplication,
-  updateApplicationStage,
+    deleteApplication,
+    getOpportunities,
+    getPlayerApplications,
+    PlayerApplication,
+    saveApplication,
+    updateApplicationStage,
 } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const filters: ('All' | OpportunityStage)[] = ['All', 'Applied', 'Trial booked', 'Offer talks', 'Saved', 'New'];
