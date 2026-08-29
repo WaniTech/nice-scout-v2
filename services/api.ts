@@ -1,9 +1,12 @@
 import {
-  Opportunity,
-  OpportunityStage,
-  PlayerClip,
-  PlayerClipStatus,
-  PlayerMessage,
+    BenchmarkReport,
+    Opportunity,
+    OpportunityStage,
+    PillarScores,
+    PlayerClip,
+    PlayerClipStatus,
+    PlayerMessage,
+    ScoutActivityReport,
 } from '@/constants/playerPlatform';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -439,4 +442,27 @@ export function evaluateOpportunityCompatibility(
       weights,
     }),
   });
+}
+
+export function getPlayerAnalytics(playerId: string) {
+  return request<{ playerId: string; pillars: PillarScores; timestamp: string }>(
+    `/player/${playerId}/analytics`
+  );
+}
+
+export function getPlayerBenchmarks(
+  playerId: string,
+  position?: string,
+  baseline?: string
+) {
+  const params = new URLSearchParams();
+  if (position) params.append('position', position);
+  if (baseline) params.append('baseline', baseline);
+  const query = params.toString() ? `?${params.toString()}` : '';
+
+  return request<BenchmarkReport>(`/player/${playerId}/benchmarks${query}`);
+}
+
+export function getPlayerScoutActivity(playerId: string) {
+  return request<ScoutActivityReport>(`/player/${playerId}/scout-activity`);
 }

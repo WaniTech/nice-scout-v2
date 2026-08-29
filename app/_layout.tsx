@@ -1,11 +1,12 @@
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { SocketProvider } from '@/contexts/SocketContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -23,7 +24,9 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <RootNavigator colorScheme={colorScheme} />
+      <SocketProvider>
+        <RootNavigator colorScheme={colorScheme} />
+      </SocketProvider>
     </AuthProvider>
   );
 }

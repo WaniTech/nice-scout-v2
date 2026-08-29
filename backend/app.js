@@ -4,6 +4,10 @@ const { createOpportunitiesRouter } = require('./routes/opportunities');
 const { createPlayerRouter } = require('./routes/player');
 const { createPlayerMatchRouter } = require('./routes/playerMatch');
 
+function isPlainObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function createApp({ store, socketService } = {}) {
   if (!store) {
     throw new Error('A store instance is required.');
@@ -33,6 +37,24 @@ function createApp({ store, socketService } = {}) {
     });
   });
 
+  app.get('/api/meta', (req, res) => {
+    res.json({
+      service: 'Scout Link Player API',
+      apiVersion: 'v2',
+      realtime: Boolean(socketService),
+      features: [
+        'auth',
+        'opportunities',
+        'player',
+        'player-match',
+        'player-analytics',
+        'player-benchmarks',
+        'socket-broadcast',
+      ],
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   // Socket status and management endpoint
   app.get('/api/socket/stats', (req, res) => {
     if (!socketService) {
@@ -46,14 +68,27 @@ function createApp({ store, socketService } = {}) {
       return res.status(503).json({ error: 'WebSocket service not attached.' });
     }
     const { room, event, payload } = req.body || {};
-    if (!event) {
+    if (typeof event !== 'string' || !event.trim()) {
       return res.status(400).json({ error: 'event is required.' });
     }
 
+    if (room !== undefined && typeof room !== 'string') {
+      return res.status(400).json({ error: 'room must be a string when provided.' });
+    }
+
+    if (payload !== undefined && !isPlainObject(payload)) {
+      return res.status(400).json({ error: 'payload must be an object when provided.' });
+    }
+
+    const message = {
+      type: event.trim(),
+      ...(payload || {}),
+    };
+
     if (room) {
-      socketService.broadcastToRoom(room, { type: event, ...payload });
+      socketService.broadcastToRoom(room, message);
     } else {
-      socketService.broadcast({ type: event, ...payload });
+      socketService.broadcast(message);
     }
 
     return res.json({ ok: true, broadcastedTo: room || 'all' });

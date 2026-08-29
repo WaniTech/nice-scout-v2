@@ -1,4 +1,9 @@
 const express = require('express');
+const {
+  calculatePillarScores,
+  calculateBenchmarks,
+  getScoutActivityFeed,
+} = require('../services/analyticsEngine');
 
 const allowedStages = new Set(['New', 'Saved', 'Applied', 'Trial booked', 'Offer talks']);
 const allowedClipStatuses = new Set(['Draft', 'Scout-ready', 'Sent']);
@@ -435,6 +440,33 @@ function createPlayerRouter(store) {
     }
 
     return res.status(204).send();
+  });
+
+  router.get('/:playerId/analytics', async (req, res) => {
+    const data = await store.read();
+    const profile = data.profiles.find((entry) => entry.playerId === req.params.playerId) || {};
+    const pillars = calculatePillarScores(profile);
+
+    return res.json({
+      playerId: req.params.playerId,
+      pillars,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  router.get('/:playerId/benchmarks', async (req, res) => {
+    const data = await store.read();
+    const profile = data.profiles.find((entry) => entry.playerId === req.params.playerId) || {};
+    const position = req.query.position || profile.position || 'Right winger';
+    const baseline = req.query.baseline || 'Danish Superliga Academy';
+
+    const benchmarks = calculateBenchmarks(position, baseline);
+    return res.json(benchmarks);
+  });
+
+  router.get('/:playerId/scout-activity', async (req, res) => {
+    const activity = getScoutActivityFeed(req.params.playerId);
+    return res.json(activity);
   });
 
   return router;

@@ -20,7 +20,7 @@ async function request(baseUrl, pathName, options = {}) {
   return { response, body };
 }
 
-async function withApi(run) {
+async function withApi(run, options = {}) {
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scout-link-api-'));
   const store = createJsonStore({
     filePath: path.join(tempDir, 'db.json'),
@@ -28,7 +28,7 @@ async function withApi(run) {
   });
   await store.reset();
 
-  const server = createApp({ store }).listen(0);
+  const server = createApp({ store, ...options }).listen(0);
   const address = server.address();
   const baseUrl = `http://127.0.0.1:${address.port}/api`;
 
@@ -252,4 +252,73 @@ test('opportunities support admin-style CRUD operations', async () => {
     const readDeleted = await request(baseUrl, `/opportunities/${create.body.id}`);
     assert.equal(readDeleted.response.status, 404);
   });
+});
+
+test('meta endpoint exposes API capabilities and realtime status', async () => {
+  await withApi(async (baseUrl) => {
+    const { response, body } = await request(baseUrl, '/meta');
+
+    assert.equal(response.status, 200);
+    assert.equal(body.service, 'Scout Link Player API');
+    assert.equal(body.apiVersion, 'v2');
+    assert.equal(body.realtime, false);
+    assert.ok(Array.isArray(body.features));
+    assert.ok(body.features.includes('socket-broadcast'));
+  });
+});
+
+test('socket broadcast validates request payload before sending', async () => {
+  const calls = {
+    all: [],
+    rooms: [],
+  };
+
+  const socketService = {
+    getStats() {
+      return { connectedClients: 2, activeRooms: 1 };
+    },
+    broadcast(message) {
+      calls.all.push(message);
+    },
+    broadcastToRoom(room, message) {
+      calls.rooms.push({ room, message });
+    },
+  };
+
+  await withApi(async (baseUrl) => {
+    const missingEvent = await request(baseUrl, '/socket/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({ payload: { hello: 'world' } }),
+    });
+    assert.equal(missingEvent.response.status, 400);
+
+    const invalidRoom = await request(baseUrl, '/socket/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({ event: 'update', room: 123 }),
+    });
+    assert.equal(invalidRoom.response.status, 400);
+
+    const invalidPayload = await request(baseUrl, '/socket/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({ event: 'update', payload: ['not', 'object'] }),
+    });
+    assert.equal(invalidPayload.response.status, 400);
+
+    const broadcastAll = await request(baseUrl, '/socket/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({ event: '  update_ready  ', payload: { source: 'day9' } }),
+    });
+    assert.equal(broadcastAll.response.status, 200);
+    assert.equal(calls.all.length, 1);
+    assert.deepEqual(calls.all[0], { type: 'update_ready', source: 'day9' });
+
+    const broadcastRoom = await request(baseUrl, '/socket/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({ room: 'scouts', event: 'new_message', payload: { unread: 3 } }),
+    });
+    assert.equal(broadcastRoom.response.status, 200);
+    assert.equal(calls.rooms.length, 1);
+    assert.equal(calls.rooms[0].room, 'scouts');
+    assert.deepEqual(calls.rooms[0].message, { type: 'new_message', unread: 3 });
+  }, { socketService });
 });

@@ -1,15 +1,26 @@
 import {
+    BenchmarkReport,
     colors,
+    defaultBenchmarkReport,
+    defaultPillars,
     defaultPlayerProfile,
+    defaultScoutActivityReport,
     mediaClips,
     opportunities,
     performanceStats,
+    PillarScores,
     profileTasks,
+    ScoutActivityReport,
 } from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+    getPlayerAnalytics,
+    getPlayerBenchmarks,
+    getPlayerScoutActivity,
+} from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     ImageBackground,
     ScrollView,
@@ -22,13 +33,61 @@ import {
 
 const heroImage = require('../../assets/images/player-hero.png');
 
+const benchmarkOptions = [
+  'Danish Superliga Academy',
+  'Eredivisie U23',
+  'German Development Squad',
+  'MLS Next Pro',
+];
+
 export default function PlayerDashboard() {
   const router = useRouter();
   const { currentUser } = useAuth();
   const [searchText, setSearchText] = useState('');
+  const [selectedBaseline, setSelectedBaseline] = useState('Danish Superliga Academy');
+
+  const [pillars, setPillars] = useState<PillarScores>(defaultPillars);
+  const [benchmarkReport, setBenchmarkReport] = useState<BenchmarkReport>(defaultBenchmarkReport);
+  const [scoutActivity, setScoutActivity] = useState<ScoutActivityReport>(defaultScoutActivityReport);
 
   const playerName = currentUser?.name ?? defaultPlayerProfile.name;
   const firstName = playerName.split(' ')[0];
+  const playerId = currentUser?.id ?? 'demo-player';
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadIntelligenceData() {
+      try {
+        const [radarRes, benchmarkRes, scoutRes] = await Promise.allSettled([
+          getPlayerAnalytics(playerId),
+          getPlayerBenchmarks(playerId, defaultPlayerProfile.position, selectedBaseline),
+          getPlayerScoutActivity(playerId),
+        ]);
+
+        if (ignore) return;
+
+        if (radarRes.status === 'fulfilled' && radarRes.value?.pillars) {
+          setPillars(radarRes.value.pillars);
+        }
+        if (benchmarkRes.status === 'fulfilled' && benchmarkRes.value?.metrics) {
+          setBenchmarkReport(benchmarkRes.value);
+        }
+        if (scoutRes.status === 'fulfilled' && scoutRes.value?.totalViews) {
+          setScoutActivity(scoutRes.value);
+        }
+      } catch {
+        // Fallback to defaults
+      }
+    }
+
+    loadIntelligenceData();
+
+    return () => {
+      ignore = true;
+    };
+  }, [playerId, selectedBaseline]);
+
   const mediaStats = useMemo(() => {
     const ready = mediaClips.filter((clip) => clip.status === 'Scout-ready' || clip.status === 'Sent').length;
     const drafts = mediaClips.filter((clip) => clip.status === 'Draft').length;
@@ -86,15 +145,178 @@ export default function PlayerDashboard() {
             <Text style={styles.heroStatLabel}>Match fit</Text>
           </View>
           <View style={styles.heroStat}>
-            <Text style={styles.heroStatValue}>{defaultPlayerProfile.scoutViews}</Text>
+            <Text style={styles.heroStatValue}>{scoutActivity.totalViews}</Text>
             <Text style={styles.heroStatLabel}>Scout views</Text>
           </View>
           <View style={styles.heroStat}>
-            <Text style={styles.heroStatValue}>3</Text>
-            <Text style={styles.heroStatLabel}>Hot leads</Text>
+            <Text style={styles.heroStatValue}>{scoutActivity.activeWatchlists}</Text>
+            <Text style={styles.heroStatLabel}>Watchlists</Text>
           </View>
         </View>
       </ImageBackground>
+
+      {/* Scout Analytics Radar / 4-Pillar Performance Card */}
+      <View style={styles.radarCard}>
+        <View style={styles.radarHeader}>
+          <View>
+            <Text style={styles.sectionKicker}>Scout Analytics Radar</Text>
+            <Text style={styles.sectionTitle}>4-Pillar Performance</Text>
+          </View>
+          <View style={styles.overallRadarBadge}>
+            <Text style={styles.overallRadarScore}>{pillars.overallRadarScore}</Text>
+            <Text style={styles.overallRadarLabel}>Score</Text>
+          </View>
+        </View>
+
+        <View style={styles.pillarGrid}>
+          <View style={styles.pillarItem}>
+            <View style={styles.pillarTop}>
+              <Text style={styles.pillarName}>Physical</Text>
+              <Text style={styles.pillarValue}>{pillars.physical}%</Text>
+            </View>
+            <View style={styles.meterTrack}>
+              <View style={[styles.meterFill, { width: `${pillars.physical}%`, backgroundColor: '#1E6B4E' }]} />
+            </View>
+          </View>
+
+          <View style={styles.pillarItem}>
+            <View style={styles.pillarTop}>
+              <Text style={styles.pillarName}>Technical</Text>
+              <Text style={styles.pillarValue}>{pillars.technical}%</Text>
+            </View>
+            <View style={styles.meterTrack}>
+              <View style={[styles.meterFill, { width: `${pillars.technical}%`, backgroundColor: '#2563EB' }]} />
+            </View>
+          </View>
+
+          <View style={styles.pillarItem}>
+            <View style={styles.pillarTop}>
+              <Text style={styles.pillarName}>Tactical</Text>
+              <Text style={styles.pillarValue}>{pillars.tactical}%</Text>
+            </View>
+            <View style={styles.meterTrack}>
+              <View style={[styles.meterFill, { width: `${pillars.tactical}%`, backgroundColor: '#C9922E' }]} />
+            </View>
+          </View>
+
+          <View style={styles.pillarItem}>
+            <View style={styles.pillarTop}>
+              <Text style={styles.pillarName}>Mental / Drive</Text>
+              <Text style={styles.pillarValue}>{pillars.mental}%</Text>
+            </View>
+            <View style={styles.meterTrack}>
+              <View style={[styles.meterFill, { width: `${pillars.mental}%`, backgroundColor: '#7E22CE' }]} />
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Academy & Pro Benchmark Comparison Hub */}
+      <View style={styles.benchmarkCard}>
+        <View style={styles.radarHeader}>
+          <View>
+            <Text style={styles.sectionKicker}>Benchmark Engine</Text>
+            <Text style={styles.sectionTitle}>Academy Comparison</Text>
+          </View>
+          <View style={styles.benchmarkTierPill}>
+            <Text style={styles.benchmarkTierText}>{benchmarkReport.tier}</Text>
+          </View>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.baselineScroll}>
+          {benchmarkOptions.map((opt) => (
+            <TouchableOpacity
+              key={opt}
+              style={[
+                styles.baselineTab,
+                selectedBaseline === opt && styles.baselineTabActive,
+              ]}
+              onPress={() => setSelectedBaseline(opt)}
+            >
+              <Text
+                style={[
+                  styles.baselineTabText,
+                  selectedBaseline === opt && styles.baselineTabTextActive,
+                ]}
+              >
+                {opt}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={styles.metricList}>
+          {benchmarkReport.metrics.map((item) => (
+            <View key={item.metric} style={styles.metricRow}>
+              <View style={styles.metricInfo}>
+                <Text style={styles.metricLabel}>{item.label}</Text>
+                <Text style={styles.metricValues}>
+                  {item.playerValue} {item.unit} vs {item.benchmarkValue} {item.unit}
+                </Text>
+              </View>
+              <View style={styles.metricBadgeWrap}>
+                <View
+                  style={[
+                    styles.metricBadge,
+                    item.diff >= 0 ? styles.badgePositive : styles.badgeNeutral,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.metricBadgeText,
+                      item.diff >= 0 ? styles.badgeTextPositive : styles.badgeTextNeutral,
+                    ]}
+                  >
+                    {item.diff >= 0 ? `+${item.diff}` : `${item.diff}`} {item.unit}
+                  </Text>
+                </View>
+                <Text style={styles.percentileText}>{item.percentile}th %tile</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Scout Intelligence & Engagement */}
+      <View style={styles.scoutActivityCard}>
+        <View style={styles.radarHeader}>
+          <View>
+            <Text style={styles.sectionKicker}>Recruitment Tracking</Text>
+            <Text style={styles.sectionTitle}>Scout Engagement</Text>
+          </View>
+          <View style={styles.scoutStatPill}>
+            <Ionicons name="eye-outline" size={14} color={colors.primary} />
+            <Text style={styles.scoutStatText}>{scoutActivity.videoReplays} Replays</Text>
+          </View>
+        </View>
+
+        <View style={styles.leagueViewsRow}>
+          {scoutActivity.viewsByLeague.slice(0, 2).map((l) => (
+            <View key={l.league} style={styles.leagueViewBlock}>
+              <Text style={styles.leagueName}>{l.league}</Text>
+              <View style={styles.leagueStatLine}>
+                <Text style={styles.leagueViewsCount}>{l.views} views</Text>
+                <Text style={styles.leagueTrend}>{l.trend}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.recentScoutsList}>
+          {scoutActivity.recentScouts.map((entry, idx) => (
+            <View key={idx} style={styles.scoutActionRow}>
+              <View style={styles.scoutAvatar}>
+                <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
+              </View>
+              <View style={styles.scoutActionInfo}>
+                <Text style={styles.scoutClubText}>{entry.club} • {entry.scout}</Text>
+                <Text style={styles.scoutActionDetail}>{entry.action}</Text>
+              </View>
+              <Text style={styles.scoutTimeText}>{entry.time}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
 
       <View style={styles.readinessPanel}>
         <View style={styles.panelHeader}>
@@ -243,13 +465,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingBottom: 102,
+    paddingBottom: 110,
   },
   hero: {
-    minHeight: 430,
+    minHeight: 440,
     paddingHorizontal: 20,
     paddingTop: 56,
-    paddingBottom: 20,
+    paddingBottom: 22,
     justifyContent: 'space-between',
     overflow: 'hidden',
   },
@@ -258,7 +480,7 @@ const styles = StyleSheet.create({
   },
   heroShade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(7, 12, 9, 0.52)',
+    backgroundColor: 'rgba(8, 24, 18, 0.62)',
   },
   heroTop: {
     flexDirection: 'row',
@@ -267,11 +489,11 @@ const styles = StyleSheet.create({
   },
   liveBadge: {
     minHeight: 34,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.22)',
+    borderColor: 'rgba(255, 255, 255, 0.28)',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -280,43 +502,47 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#7CFF9C',
+    backgroundColor: '#10B981',
   },
   liveBadgeText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '800',
     fontSize: 12,
+    letterSpacing: 0.4,
   },
   heroIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.22)',
+    borderColor: 'rgba(255, 255, 255, 0.28)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   heroEyebrow: {
-    color: '#E8C77C',
+    color: '#FBBF24',
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '800',
     textTransform: 'uppercase',
-    marginBottom: 10,
+    letterSpacing: 1.2,
+    marginBottom: 8,
   },
   heroTitle: {
     color: '#FFFFFF',
-    fontSize: 35,
-    lineHeight: 39,
+    fontSize: 34,
+    lineHeight: 40,
     fontWeight: '900',
     maxWidth: 360,
+    letterSpacing: -0.5,
   },
   heroSubtitle: {
-    color: '#E8EFE5',
-    fontSize: 15,
+    color: '#E2E8F0',
+    fontSize: 14,
     lineHeight: 22,
-    marginTop: 12,
+    marginTop: 10,
     maxWidth: 420,
+    fontWeight: '500',
   },
   heroStats: {
     flexDirection: 'row',
@@ -324,30 +550,295 @@ const styles = StyleSheet.create({
   },
   heroStat: {
     flex: 1,
-    minHeight: 78,
-    borderRadius: 8,
+    minHeight: 82,
+    borderRadius: 14,
     padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.13)',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderColor: 'rgba(255, 255, 255, 0.22)',
     justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   heroStatValue: {
     color: '#FFFFFF',
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
+    letterSpacing: -0.5,
   },
   heroStatLabel: {
-    color: '#DDE8D8',
+    color: '#CBD5E1',
     fontSize: 12,
     fontWeight: '700',
     marginTop: 2,
   },
-  readinessPanel: {
+  radarCard: {
     marginHorizontal: 16,
     marginTop: 18,
-    padding: 18,
-    borderRadius: 8,
+    padding: 20,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  radarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  overallRadarBadge: {
+    minWidth: 58,
+    borderRadius: 12,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  overallRadarScore: {
+    color: '#0D5C3A',
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  overallRadarLabel: {
+    color: '#059669',
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  pillarGrid: {
+    gap: 14,
+  },
+  pillarItem: {
+    gap: 6,
+  },
+  pillarTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  pillarName: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  pillarValue: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  meterTrack: {
+    height: 8,
+    borderRadius: 6,
+    backgroundColor: colors.surfaceAlt,
+    overflow: 'hidden',
+  },
+  meterFill: {
+    height: 8,
+    borderRadius: 6,
+  },
+  benchmarkCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  benchmarkTierPill: {
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  benchmarkTierText: {
+    color: '#B45309',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  baselineScroll: {
+    marginBottom: 16,
+  },
+  baselineTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.surfaceAlt,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  baselineTabActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  baselineTabText: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  baselineTabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  metricList: {
+    gap: 12,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceAlt,
+  },
+  metricInfo: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  metricLabel: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  metricValues: {
+    color: colors.muted,
+    fontSize: 12,
+    marginTop: 3,
+  },
+  metricBadgeWrap: {
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  metricBadge: {
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  badgePositive: {
+    backgroundColor: '#DCFCE7',
+  },
+  badgeNeutral: {
+    backgroundColor: '#FEF3C7',
+  },
+  metricBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  badgeTextPositive: {
+    color: '#15803D',
+  },
+  badgeTextNeutral: {
+    color: '#D97706',
+  },
+  percentileText: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  scoutActivityCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  scoutStatPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  scoutStatText: {
+    color: '#15803D',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  leagueViewsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  leagueViewBlock: {
+    flex: 1,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    padding: 12,
+  },
+  leagueName: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  leagueStatLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  leagueViewsCount: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  leagueTrend: {
+    color: '#15803D',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  recentScoutsList: {
+    gap: 12,
+  },
+  scoutActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  scoutAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoutActionInfo: {
+    flex: 1,
+  },
+  scoutClubText: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  scoutActionDetail: {
+    color: colors.muted,
+    fontSize: 12,
+    marginTop: 1,
+  },
+  scoutTimeText: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  readinessPanel: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 18,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
@@ -360,14 +851,16 @@ const styles = StyleSheet.create({
   sectionKicker: {
     color: colors.accent,
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '800',
     textTransform: 'uppercase',
+    letterSpacing: 0.8,
     marginBottom: 4,
   },
   sectionTitle: {
     color: colors.ink,
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
+    letterSpacing: -0.3,
   },
   completion: {
     color: colors.primary,
@@ -388,23 +881,24 @@ const styles = StyleSheet.create({
   },
   taskList: {
     marginTop: 14,
-    gap: 8,
+    gap: 10,
   },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   taskText: {
     flex: 1,
     color: colors.muted,
     fontSize: 13,
     lineHeight: 18,
+    fontWeight: '500',
   },
   inlineButton: {
-    marginTop: 14,
-    minHeight: 42,
-    borderRadius: 8,
+    marginTop: 16,
+    minHeight: 44,
+    borderRadius: 12,
     backgroundColor: colors.surfaceAlt,
     flexDirection: 'row',
     alignItems: 'center',
@@ -413,11 +907,12 @@ const styles = StyleSheet.create({
   },
   inlineButtonText: {
     color: colors.primary,
-    fontWeight: '900',
+    fontWeight: '800',
+    fontSize: 13,
   },
   sectionHeader: {
     marginHorizontal: 16,
-    marginTop: 24,
+    marginTop: 26,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -425,8 +920,8 @@ const styles = StyleSheet.create({
   },
   viewAll: {
     color: colors.primary,
-    fontWeight: '900',
-    fontSize: 14,
+    fontWeight: '800',
+    fontSize: 13,
   },
   statGrid: {
     marginHorizontal: 16,
@@ -436,8 +931,8 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48.5%',
-    minHeight: 106,
-    borderRadius: 8,
+    minHeight: 108,
+    borderRadius: 14,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
@@ -448,29 +943,30 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 24,
     fontWeight: '900',
+    letterSpacing: -0.5,
   },
   statLabel: {
     color: colors.muted,
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '600',
   },
   statTrend: {
     alignSelf: 'flex-start',
-    color: colors.primary,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 8,
+    color: '#0D5C3A',
+    backgroundColor: '#ECFDF5',
+    borderRadius: 6,
     overflow: 'hidden',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    fontSize: 12,
-    fontWeight: '900',
+    paddingVertical: 3,
+    fontSize: 11,
+    fontWeight: '800',
   },
   mediaPanel: {
     marginHorizontal: 16,
     marginTop: 16,
-    borderRadius: 8,
+    borderRadius: 18,
     backgroundColor: colors.primaryDark,
-    padding: 16,
+    padding: 18,
   },
   mediaHeader: {
     flexDirection: 'row',
@@ -480,8 +976,8 @@ const styles = StyleSheet.create({
   mediaIcon: {
     width: 46,
     height: 46,
-    borderRadius: 8,
-    backgroundColor: colors.primary,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -490,11 +986,11 @@ const styles = StyleSheet.create({
   },
   mediaTitle: {
     color: '#FFFFFF',
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: '900',
   },
   mediaText: {
-    color: '#DDE8D8',
+    color: '#CBD5E1',
     fontSize: 13,
     lineHeight: 19,
     marginTop: 4,
@@ -502,46 +998,46 @@ const styles = StyleSheet.create({
   mediaStatsRow: {
     flexDirection: 'row',
     gap: 9,
-    marginTop: 14,
+    marginTop: 16,
   },
   mediaStatBlock: {
     flex: 1,
-    minHeight: 66,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    minHeight: 68,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
     padding: 10,
     justifyContent: 'center',
   },
   mediaStatValue: {
     color: '#FFFFFF',
-    fontSize: 21,
+    fontSize: 22,
     fontWeight: '900',
   },
   mediaStatLabel: {
-    color: '#DDE8D8',
+    color: '#CBD5E1',
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     marginTop: 2,
   },
   mediaButton: {
-    minHeight: 44,
-    borderRadius: 8,
+    minHeight: 46,
+    borderRadius: 12,
     backgroundColor: colors.accent,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    marginTop: 14,
+    marginTop: 16,
   },
   mediaButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   searchShell: {
     marginHorizontal: 16,
     minHeight: 50,
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.line,
     backgroundColor: colors.surface,
@@ -553,14 +1049,14 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: colors.ink,
-    fontSize: 15,
+    fontSize: 14,
     paddingVertical: 10,
   },
   opportunityCard: {
     marginHorizontal: 16,
     marginTop: 12,
-    padding: 16,
-    borderRadius: 8,
+    padding: 18,
+    borderRadius: 18,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
@@ -573,69 +1069,69 @@ const styles = StyleSheet.create({
   },
   club: {
     color: colors.ink,
-    fontSize: 18,
-    fontWeight: '900',
+    fontSize: 17,
+    fontWeight: '800',
   },
   role: {
     color: colors.muted,
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 3,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 2,
   },
   fitPill: {
-    minWidth: 58,
-    borderRadius: 8,
-    backgroundColor: '#F7F2E6',
+    minWidth: 54,
+    borderRadius: 10,
+    backgroundColor: '#FFFBEB',
     borderWidth: 1,
-    borderColor: '#E4D4AD',
+    borderColor: '#FDE68A',
     alignItems: 'center',
-    paddingVertical: 7,
+    paddingVertical: 5,
     paddingHorizontal: 8,
   },
   fitValue: {
-    color: colors.accent,
+    color: '#B45309',
     fontWeight: '900',
-    fontSize: 16,
+    fontSize: 15,
   },
   fitLabel: {
-    color: colors.accent,
+    color: '#B45309',
     fontWeight: '800',
-    fontSize: 10,
+    fontSize: 9,
     textTransform: 'uppercase',
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
-    marginTop: 10,
+    marginTop: 8,
   },
   metaText: {
     flex: 1,
     color: colors.muted,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '500',
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 14,
+    gap: 6,
+    marginTop: 12,
   },
   tag: {
     color: colors.primary,
     backgroundColor: colors.surfaceAlt,
-    borderRadius: 8,
+    borderRadius: 6,
     overflow: 'hidden',
     paddingHorizontal: 9,
-    paddingVertical: 5,
-    fontSize: 12,
-    fontWeight: '900',
+    paddingVertical: 4,
+    fontSize: 11,
+    fontWeight: '700',
   },
   emptyState: {
     marginHorizontal: 16,
     marginTop: 16,
-    padding: 24,
-    borderRadius: 8,
+    padding: 28,
+    borderRadius: 18,
     backgroundColor: colors.surface,
     alignItems: 'center',
     borderWidth: 1,
@@ -643,13 +1139,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     color: colors.ink,
-    fontWeight: '900',
-    fontSize: 17,
+    fontWeight: '800',
+    fontSize: 16,
     marginTop: 10,
   },
   emptyText: {
     color: colors.muted,
     marginTop: 4,
+    fontSize: 13,
     textAlign: 'center',
   },
 });

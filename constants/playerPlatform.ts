@@ -56,18 +56,18 @@ export type PlayerClip = {
 };
 
 export const colors = {
-  background: '#F5F7F0',
-  ink: '#111813',
-  muted: '#657166',
-  line: '#DDE4D7',
+  background: '#F8FAFC',
+  ink: '#0F172A',
+  muted: '#64748B',
+  line: '#E2E8F0',
   surface: '#FFFFFF',
-  surfaceAlt: '#EDF3E8',
-  primary: '#1E6B4E',
-  primaryDark: '#0D3427',
-  accent: '#C9922E',
-  blue: '#2D5B7C',
-  red: '#C84B3A',
-  tab: '#101712',
+  surfaceAlt: '#F1F5F9',
+  primary: '#0D5C3A',
+  primaryDark: '#08281D',
+  accent: '#D97706',
+  blue: '#2563EB',
+  red: '#DC2626',
+  tab: '#0A1E17',
 };
 
 export const demoCredentials = {
@@ -337,6 +337,96 @@ export const profileTasks = [
   'Add sprint data from the last 30 days',
   'Confirm July travel availability',
 ];
+
+export type PillarScores = {
+  physical: number;
+  technical: number;
+  tactical: number;
+  mental: number;
+  overallRadarScore: number;
+};
+
+export type BenchmarkMetric = {
+  metric: string;
+  label: string;
+  playerValue: number;
+  benchmarkValue: number;
+  unit: string;
+  percentile: number;
+  diff: number;
+  status: 'Above Benchmark' | 'Developing';
+};
+
+export type BenchmarkReport = {
+  position: string;
+  baseline: string;
+  tier: string;
+  readinessIndex: number;
+  metrics: BenchmarkMetric[];
+};
+
+export type ScoutActivityLeague = {
+  league: string;
+  views: number;
+  trend: string;
+};
+
+export type ScoutActivityItem = {
+  club: string;
+  scout: string;
+  action: string;
+  time: string;
+};
+
+export type ScoutActivityReport = {
+  playerId: string;
+  totalViews: number;
+  activeWatchlists: number;
+  videoReplays: number;
+  viewsByLeague: ScoutActivityLeague[];
+  recentScouts: ScoutActivityItem[];
+};
+
+export const defaultPillars: PillarScores = {
+  physical: 92,
+  technical: 91,
+  tactical: 88,
+  mental: 90,
+  overallRadarScore: 90,
+};
+
+export const defaultBenchmarkReport: BenchmarkReport = {
+  position: 'Right winger',
+  baseline: 'Danish Superliga Academy',
+  tier: 'Tier 1 Academy',
+  readinessIndex: 91,
+  metrics: [
+    { metric: 'sprintPeak', label: 'Top Sprint Speed', playerValue: 34.6, benchmarkValue: 34.0, unit: 'km/h', percentile: 94, diff: 0.6, status: 'Above Benchmark' },
+    { metric: 'xGChain', label: 'Expected Goal Chain', playerValue: 0.71, benchmarkValue: 0.65, unit: '/90', percentile: 93, diff: 0.06, status: 'Above Benchmark' },
+    { metric: 'pressWins', label: 'High Press Regains', playerValue: 7.1, benchmarkValue: 6.5, unit: '/90', percentile: 93, diff: 0.6, status: 'Above Benchmark' },
+    { metric: 'dribbleSuccess', label: '1v1 Dribble Success', playerValue: 68.0, benchmarkValue: 62.0, unit: '%', percentile: 93, diff: 6.0, status: 'Above Benchmark' },
+    { metric: 'crossAccuracy', label: 'Open-Play Cross Accuracy', playerValue: 35.5, benchmarkValue: 32.0, unit: '%', percentile: 94, diff: 3.5, status: 'Above Benchmark' },
+    { metric: 'defensiveWorkrate', label: 'Defensive Recovery Rate', playerValue: 74.0, benchmarkValue: 70.0, unit: '%', percentile: 90, diff: 4.0, status: 'Above Benchmark' },
+  ],
+};
+
+export const defaultScoutActivityReport: ScoutActivityReport = {
+  playerId: 'demo-player',
+  totalViews: 68,
+  activeWatchlists: 7,
+  videoReplays: 34,
+  viewsByLeague: [
+    { league: 'Danish Superliga Academy', views: 28, trend: '+14%' },
+    { league: 'Eredivisie U23', views: 22, trend: '+8%' },
+    { league: 'German 3. Liga / Development', views: 12, trend: '+20%' },
+    { league: 'Liga Portugal B', views: 6, trend: '+5%' },
+  ],
+  recentScouts: [
+    { club: 'FC Midtjylland', scout: 'Mikkel Soren', action: 'Video replayed (3x)', time: '2 hours ago' },
+    { club: 'AZ Alkmaar', scout: 'Noah Janssen', action: 'Added to Watchlist', time: 'Yesterday' },
+    { club: 'SC Freiburg II', scout: 'Lena Weiss', action: 'Downloaded GPS Profile', time: '2 days ago' },
+  ],
+};
 
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
