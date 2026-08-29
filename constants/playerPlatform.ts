@@ -428,6 +428,68 @@ export const defaultScoutActivityReport: ScoutActivityReport = {
   ],
 };
 
+export type TrialStatus = 'Pending' | 'Confirmed' | 'Rescheduled' | 'Declined' | 'Completed';
+
+export type TrialChecklistItem = {
+  id: string;
+  title: string;
+  category: 'performance' | 'travel' | 'medical' | 'equipment' | 'logistics';
+  completed: boolean;
+  required: boolean;
+};
+
+export type TrialBooking = {
+  id: string;
+  playerId: string;
+  opportunityId: string;
+  club: string;
+  trialDate: string;
+  timeSlot: string;
+  location: string;
+  status: TrialStatus;
+  scoutContact: string;
+  notes: string;
+  checklist: TrialChecklistItem[];
+  progress?: {
+    total: number;
+    completed: number;
+    percent: number;
+    requiredComplete: boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const defaultTrialBookings: TrialBooking[] = [
+  {
+    id: 'trial-1',
+    playerId: 'demo-player',
+    opportunityId: '1',
+    club: 'FC Midtjylland',
+    trialDate: 'June 24, 2026',
+    timeSlot: 'Morning Session (09:30 - 12:00 CET)',
+    location: 'Ikast Træningscenter, Herning, Denmark',
+    status: 'Confirmed',
+    scoutContact: 'Mikkel Soren',
+    notes: 'First-team bridge trial. Pitch 3, bring white training kit.',
+    checklist: [
+      { id: 'chk-1', title: 'GPS Sprint Report (Last 30 Days)', category: 'performance', completed: true, required: true },
+      { id: 'chk-2', title: 'Valid Passport / EU Travel Permit', category: 'travel', completed: true, required: true },
+      { id: 'chk-3', title: 'Sports Medical & Injury Clearance', category: 'medical', completed: false, required: true },
+      { id: 'chk-4', title: 'Two Pairs of Firm-Ground / Turf Boots', category: 'equipment', completed: true, required: false },
+      { id: 'chk-5', title: 'Emergency Contact & Club Accommodation Form', category: 'logistics', completed: false, required: false },
+    ],
+    progress: {
+      total: 5,
+      completed: 3,
+      percent: 60,
+      requiredComplete: false,
+    },
+    createdAt: '2026-06-10T10:00:00.000Z',
+    updatedAt: '2026-06-12T14:30:00.000Z',
+  },
+];
+
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);

@@ -1,16 +1,35 @@
-import { applicationSteps, colors, findOpportunity, OpportunityStage } from '@/constants/playerPlatform';
+import {
+    applicationSteps,
+    colors,
+    defaultTrialBookings,
+    findOpportunity,
+    OpportunityStage,
+    TrialBooking,
+    TrialChecklistItem,
+    TrialStatus,
+} from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  deleteApplication,
-  getPlayerApplications,
-  PlayerApplication,
-  saveApplication,
-  updateApplicationStage,
+    deleteApplication,
+    getPlayerApplications,
+    getPlayerTrials,
+    PlayerApplication,
+    rsvpTrialBooking,
+    saveApplication,
+    scheduleTrialBooking,
+    toggleTrialChecklistItem,
+    updateApplicationStage,
 } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const timeSlotOptions = [
+  'Morning Session (09:30 - 12:00 CET)',
+  'Afternoon Match Assessment (14:30 - 17:00 CET)',
+  'Full-Day Academy Trial (09:00 - 17:30 CET)',
+];
 
 export default function OpportunityDetail() {
   const { id } = useLocalSearchParams();
@@ -19,39 +38,53 @@ export default function OpportunityDetail() {
   const opportunity = findOpportunity(id);
   const [stage, setStage] = useState<OpportunityStage>(opportunity?.stage ?? 'New');
   const [application, setApplication] = useState<PlayerApplication | null>(null);
+  const [trialBooking, setTrialBooking] = useState<TrialBooking | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState(timeSlotOptions[0]);
   const [syncNotice, setSyncNotice] = useState('');
+
+  const playerId = currentUser?.id ?? 'demo-player';
+  const opportunityId = Array.isArray(id) ? id[0] : id;
 
   useEffect(() => {
     let ignore = false;
-    const playerId = currentUser?.id ?? 'demo-player';
-    const opportunityId = Array.isArray(id) ? id[0] : id;
 
-    async function loadApplication() {
-      if (!opportunityId) {
-        return;
-      }
+    async function loadData() {
+      if (!opportunityId) return;
 
       try {
-        const applications = await getPlayerApplications(playerId);
-        const foundApplication = applications.find((entry) => entry.opportunityId === opportunityId);
+        const [applications, trials] = await Promise.all([
+          getPlayerApplications(playerId),
+          getPlayerTrials(playerId),
+        ]);
 
-        if (!ignore && foundApplication) {
+        if (ignore) return;
+
+        const foundApplication = applications.find((entry) => entry.opportunityId === opportunityId);
+        if (foundApplication) {
           setApplication(foundApplication);
           setStage(foundApplication.stage);
         }
+
+        const foundTrial = trials.find((t) => t.opportunityId === opportunityId);
+        if (foundTrial) {
+          setTrialBooking(foundTrial);
+          setSelectedSlot(foundTrial.timeSlot || timeSlotOptions[0]);
+        } else if (opportunity?.stage === 'Trial booked') {
+          setTrialBooking(defaultTrialBookings[0]);
+        }
       } catch {
-        if (!ignore) {
-          setSyncNotice('Showing local detail while API is unavailable');
+        if (!ignore && opportunity?.stage === 'Trial booked') {
+          setTrialBooking(defaultTrialBookings[0]);
         }
       }
     }
 
-    loadApplication();
+    loadData();
 
     return () => {
       ignore = true;
     };
-  }, [currentUser?.id, id]);
+  }, [playerId, opportunityId, opportunity?.stage]);
 
   if (!opportunity) {
     return (
@@ -96,6 +129,55 @@ export default function OpportunityDetail() {
     }
   };
 
+  const handleBookTrialSlot = async () => {
+    try {
+      const booked = await scheduleTrialBooking(playerId, {
+        opportunityId: opportunity.id,
+        club: opportunity.club,
+        trialDate: opportunity.trialDate,
+        timeSlot: selectedSlot,
+        location: `${opportunity.city}, ${opportunity.country}`,
+        scoutContact: opportunity.scout,
+        notes: `Selected slot: ${selectedSlot}`,
+      });
+      setTrialBooking(booked);
+      await saveStage('Trial booked');
+      setSyncNotice('Trial booking confirmed with club recruitment desk!');
+    } catch {
+      setSyncNotice('Could not schedule trial. Please try again.');
+    }
+  };
+
+  const handleRSVP = async (status: TrialStatus) => {
+    if (!trialBooking) return;
+    try {
+      const updated = await rsvpTrialBooking(playerId, trialBooking.id, {
+        status,
+        reason: status === 'Confirmed' ? 'Confirmed attendance by player' : 'Reschedule requested by player',
+      });
+      setTrialBooking(updated);
+      setSyncNotice(`Trial RSVP updated to: ${status}`);
+    } catch {
+      setSyncNotice('Could not update RSVP status.');
+    }
+  };
+
+  const handleToggleChecklist = async (item: TrialChecklistItem) => {
+    if (!trialBooking) return;
+    try {
+      const updated = await toggleTrialChecklistItem(playerId, trialBooking.id, item.id, !item.completed);
+      setTrialBooking(updated);
+    } catch {
+      setTrialBooking((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          checklist: prev.checklist.map((c) => (c.id === item.id ? { ...c, completed: !c.completed } : c)),
+        };
+      });
+    }
+  };
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -137,6 +219,117 @@ export default function OpportunityDetail() {
               <Text style={styles.statusValue}>{stage}</Text>
             </View>
           </View>
+        </View>
+
+        {/* Interactive Trial Scheduling & Scout RSVP Portal */}
+        <View style={styles.trialPortalCard}>
+          <View style={styles.portalHeader}>
+            <View style={styles.portalIcon}>
+              <Ionicons name="calendar" size={22} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.portalKicker}>Recruitment Schedule</Text>
+              <Text style={styles.portalTitle}>Trial Invitation & RSVP</Text>
+            </View>
+            <View
+              style={[
+                styles.rsvpStatusBadge,
+                trialBooking?.status === 'Confirmed' ? styles.badgeConfirmed : styles.badgePending,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.rsvpStatusText,
+                  trialBooking?.status === 'Confirmed' ? styles.badgeTextConfirmed : styles.badgeTextPending,
+                ]}
+              >
+                {trialBooking?.status || 'Slot Available'}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.portalMeta}>
+            Trial Date: <Text style={{ fontWeight: '800', color: colors.ink }}>{opportunity.trialDate}</Text> • {opportunity.city}
+          </Text>
+
+          {/* Time Slot Selector */}
+          <Text style={styles.slotSelectLabel}>Select Trial Time Slot</Text>
+          <View style={styles.slotGrid}>
+            {timeSlotOptions.map((slot) => {
+              const isSelected = selectedSlot === slot;
+              return (
+                <TouchableOpacity
+                  key={slot}
+                  style={[styles.slotItem, isSelected && styles.slotItemActive]}
+                  onPress={() => setSelectedSlot(slot)}
+                >
+                  <Ionicons
+                    name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                    size={16}
+                    color={isSelected ? colors.primary : colors.muted}
+                  />
+                  <Text style={[styles.slotItemText, isSelected && styles.slotItemTextActive]}>
+                    {slot}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* RSVP Action Buttons */}
+          <View style={styles.rsvpActionRow}>
+            <TouchableOpacity
+              style={[styles.rsvpBtn, styles.rsvpConfirmBtn]}
+              onPress={() => (trialBooking ? handleRSVP('Confirmed') : handleBookTrialSlot())}
+            >
+              <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
+              <Text style={styles.rsvpBtnText}>
+                {trialBooking?.status === 'Confirmed' ? 'Attendance Confirmed' : 'Confirm Slot'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.rsvpBtn, styles.rsvpRescheduleBtn]}
+              onPress={() => handleRSVP('Rescheduled')}
+            >
+              <Ionicons name="time-outline" size={16} color={colors.accent} />
+              <Text style={[styles.rsvpBtnText, { color: colors.accent }]}>Reschedule</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Travel & Performance Logistics Checklist */}
+          {trialBooking?.checklist ? (
+            <View style={styles.checklistSection}>
+              <View style={styles.checklistHeader}>
+                <Text style={styles.checklistTitle}>Trial Day Logistics & Checklist</Text>
+                <Text style={styles.checklistProgress}>
+                  {trialBooking.checklist.filter((c) => c.completed).length} / {trialBooking.checklist.length} Complete
+                </Text>
+              </View>
+
+              {trialBooking.checklist.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.checkItemRow}
+                  onPress={() => handleToggleChecklist(item)}
+                >
+                  <Ionicons
+                    name={item.completed ? 'checkbox' : 'square-outline'}
+                    size={20}
+                    color={item.completed ? colors.primary : colors.muted}
+                  />
+                  <Text style={[styles.checkItemText, item.completed && styles.checkItemTextDone]}>
+                    {item.title}
+                  </Text>
+                  {item.required ? (
+                    <View style={styles.requiredTag}>
+                      <Text style={styles.requiredTagText}>Required</Text>
+                    </View>
+                  ) : null}
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.infoGrid}>
@@ -356,6 +549,189 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     marginTop: 5,
+  },
+  trialPortalCard: {
+    marginTop: 16,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 18,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  portalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  portalIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  portalKicker: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  portalTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  rsvpStatusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  badgeConfirmed: {
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  badgePending: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  rsvpStatusText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  badgeTextConfirmed: {
+    color: '#15803D',
+  },
+  badgeTextPending: {
+    color: '#D97706',
+  },
+  portalMeta: {
+    color: colors.muted,
+    fontSize: 13,
+    marginBottom: 14,
+  },
+  slotSelectLabel: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  slotGrid: {
+    gap: 8,
+    marginBottom: 14,
+  },
+  slotItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  slotItemActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: colors.primary,
+  },
+  slotItemText: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+  },
+  slotItemTextActive: {
+    color: colors.primary,
+    fontWeight: '800',
+  },
+  rsvpActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  rsvpBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  rsvpConfirmBtn: {
+    backgroundColor: colors.primary,
+  },
+  rsvpRescheduleBtn: {
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  rsvpBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  checklistSection: {
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceAlt,
+    gap: 10,
+  },
+  checklistHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  checklistTitle: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  checklistProgress: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  checkItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 4,
+  },
+  checkItemText: {
+    flex: 1,
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  checkItemTextDone: {
+    color: colors.muted,
+    textDecorationLine: 'line-through',
+  },
+  requiredTag: {
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  requiredTagText: {
+    color: colors.red,
+    fontSize: 10,
+    fontWeight: '800',
   },
   infoGrid: {
     marginTop: 12,

@@ -7,6 +7,8 @@ import {
     PlayerClipStatus,
     PlayerMessage,
     ScoutActivityReport,
+    TrialBooking,
+    TrialStatus,
 } from '@/constants/playerPlatform';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -465,4 +467,54 @@ export function getPlayerBenchmarks(
 
 export function getPlayerScoutActivity(playerId: string) {
   return request<ScoutActivityReport>(`/player/${playerId}/scout-activity`);
+}
+
+export function getPlayerTrials(playerId: string) {
+  return request<TrialBooking[]>(`/trials/${playerId}`);
+}
+
+export function scheduleTrialBooking(
+  playerId: string,
+  payload: {
+    opportunityId: string;
+    club?: string;
+    trialDate: string;
+    timeSlot?: string;
+    location?: string;
+    scoutContact?: string;
+    notes?: string;
+  }
+) {
+  return request<TrialBooking>(`/trials/${playerId}/schedule`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function rsvpTrialBooking(
+  playerId: string,
+  trialId: string,
+  payload: {
+    status: TrialStatus;
+    reason?: string;
+    requestedDate?: string;
+    requestedTimeSlot?: string;
+  }
+) {
+  return request<TrialBooking>(`/trials/${playerId}/${trialId}/rsvp`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function toggleTrialChecklistItem(
+  playerId: string,
+  trialId: string,
+  itemId: string,
+  completed?: boolean
+) {
+  return request<TrialBooking>(`/trials/${playerId}/${trialId}/checklist/${itemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ completed }),
+  });
 }
