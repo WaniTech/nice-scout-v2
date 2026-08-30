@@ -490,6 +490,96 @@ export const defaultTrialBookings: TrialBooking[] = [
   },
 ];
 
+export type CareerMilestone = {
+  id: string;
+  club: string;
+  role: string;
+  period: string;
+  appearances: number;
+  goals: number;
+  assists: number;
+  verified: boolean;
+  category: string;
+};
+
+export type PassportMetrics = {
+  fifaId: string;
+  passportStatus: string;
+  verificationTier: string;
+  nationality: string;
+  secondNationality: string;
+  workPermitStatus: string;
+  preferredFoot: string;
+  heightWeight: string;
+  agencyRepresentation: string;
+  medicalClearance: string;
+  scoutEndorsements: number;
+};
+
+export type PlayerPassport = {
+  playerId: string;
+  metrics: PassportMetrics;
+  milestones: CareerMilestone[];
+  verificationScore: number;
+  shareableUrl: string;
+  updatedAt: string;
+};
+
+export const defaultPassport: PlayerPassport = {
+  playerId: 'demo-player',
+  metrics: {
+    fifaId: 'FIFA-DK-2026-88912',
+    passportStatus: 'Verified Pro Prospect',
+    verificationTier: 'Tier 1 Talent ID',
+    nationality: 'Danish (EU Citizen)',
+    secondNationality: 'None',
+    workPermitStatus: 'Full EU Working Rights (No Visa Required)',
+    preferredFoot: 'Right (Left 4/5)',
+    heightWeight: '178 cm / 72 kg',
+    agencyRepresentation: 'Nordic Sports Talent Management',
+    medicalClearance: 'FIFA Grade A (Clean 2026)',
+    scoutEndorsements: 6,
+  },
+  milestones: [
+    {
+      id: 'milestone-1',
+      club: 'FC Midtjylland Academy',
+      role: 'U19 Starting Winger',
+      period: '2023 - 2025',
+      appearances: 38,
+      goals: 14,
+      assists: 11,
+      verified: true,
+      category: 'Academy',
+    },
+    {
+      id: 'milestone-2',
+      club: 'HB Koge Reserve',
+      role: 'Senior Cup Trialist',
+      period: '2025 - 2026',
+      appearances: 12,
+      goals: 5,
+      assists: 4,
+      verified: true,
+      category: 'Senior Reserve',
+    },
+    {
+      id: 'milestone-3',
+      club: 'Denmark U20 National Pool',
+      role: 'Invited Training Camp',
+      period: 'Spring 2026',
+      appearances: 3,
+      goals: 1,
+      assists: 2,
+      verified: true,
+      category: 'International',
+    },
+  ],
+  verificationScore: 94,
+  shareableUrl: 'https://nicescout.app/passport/demo-player',
+  updatedAt: '2026-08-30T10:00:00.000Z',
+};
+
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);

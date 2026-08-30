@@ -13,6 +13,12 @@ import {
     View,
 } from 'react-native';
 
+const weightPresets = {
+  balanced: { positionWeight: 0.35, tacticalWeight: 0.30, locationWeight: 0.20, financialWeight: 0.15 },
+  tactical: { positionWeight: 0.25, tacticalWeight: 0.50, locationWeight: 0.15, financialWeight: 0.10 },
+  location: { positionWeight: 0.30, tacticalWeight: 0.20, locationWeight: 0.40, financialWeight: 0.10 },
+};
+
 export default function PlayerMatchRoom() {
   const router = useRouter();
   const { currentUser } = useAuth();
@@ -33,12 +39,6 @@ export default function PlayerMatchRoom() {
       minimumPackage: '€3,500/mo',
     },
   }), [currentUser]);
-
-  const weightPresets = {
-    balanced: { positionWeight: 0.35, tacticalWeight: 0.30, locationWeight: 0.20, financialWeight: 0.15 },
-    tactical: { positionWeight: 0.25, tacticalWeight: 0.50, locationWeight: 0.15, financialWeight: 0.10 },
-    location: { positionWeight: 0.30, tacticalWeight: 0.20, locationWeight: 0.40, financialWeight: 0.10 },
-  };
 
   const matches = useMemo(() => {
     if (!hasRun) return [];

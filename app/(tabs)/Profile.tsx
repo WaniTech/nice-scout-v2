@@ -1,19 +1,24 @@
 import {
+  CareerMilestone,
   colors,
+  defaultPassport,
   defaultPlayerProfile,
   mediaClips,
   performanceStats,
+  PlayerPassport,
 } from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
+import { addCareerMilestone, getPlayerPassport } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -22,6 +27,39 @@ export default function ProfilePage() {
   const router = useRouter();
   const { currentUser, signOut } = useAuth();
   const [profileImage, setProfileImage] = useState('');
+  const [passport, setPassport] = useState<PlayerPassport>(defaultPassport);
+  const [shareNotice, setShareNotice] = useState('');
+  const [showAddMilestone, setShowAddMilestone] = useState(false);
+
+  const [newClub, setNewClub] = useState('');
+  const [newRole, setNewRole] = useState('');
+  const [newPeriod, setNewPeriod] = useState('');
+  const [newApps, setNewApps] = useState('');
+  const [newGoals, setNewGoals] = useState('');
+  const newCategory = 'Club';
+
+  const playerId = currentUser?.id ?? 'demo-player';
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadPassport() {
+      try {
+        const data = await getPlayerPassport(playerId);
+        if (!ignore && data) {
+          setPassport(data);
+        }
+      } catch {
+        // Fallback to defaultPassport
+      }
+    }
+
+    loadPassport();
+
+    return () => {
+      ignore = true;
+    };
+  }, [playerId]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -38,6 +76,51 @@ export default function ProfilePage() {
 
     if (!result.canceled) {
       setProfileImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSharePassport = () => {
+    setShareNotice(`Passport link copied: ${passport.shareableUrl}`);
+    setTimeout(() => setShareNotice(''), 4000);
+  };
+
+  const handleAddMilestone = async () => {
+    if (!newClub || !newRole || !newPeriod) return;
+
+    try {
+      const updated = await addCareerMilestone(playerId, {
+        club: newClub,
+        role: newRole,
+        period: newPeriod,
+        appearances: Number(newApps) || 0,
+        goals: Number(newGoals) || 0,
+        category: newCategory,
+      });
+      setPassport(updated);
+      setNewClub('');
+      setNewRole('');
+      setNewPeriod('');
+      setNewApps('');
+      setNewGoals('');
+      setShowAddMilestone(false);
+      setShareNotice('Milestone added to your verified career timeline');
+    } catch {
+      const localMilestone: CareerMilestone = {
+        id: `milestone-${Date.now()}`,
+        club: newClub,
+        role: newRole,
+        period: newPeriod,
+        appearances: Number(newApps) || 0,
+        goals: Number(newGoals) || 0,
+        assists: 0,
+        verified: true,
+        category: newCategory,
+      };
+      setPassport((prev) => ({
+        ...prev,
+        milestones: [localMilestone, ...prev.milestones],
+      }));
+      setShowAddMilestone(false);
     }
   };
 
@@ -111,6 +194,143 @@ export default function ProfilePage() {
         <View style={styles.infoCard}>
           <Text style={styles.infoValue}>{defaultPlayerProfile.foot}</Text>
           <Text style={styles.infoLabel}>Strong foot</Text>
+        </View>
+      </View>
+
+      {/* Digital Scouting Passport & Verified Badge Card */}
+      <View style={styles.passportCard}>
+        <View style={styles.passportHeader}>
+          <View style={styles.passportBadge}>
+            <Ionicons name="ribbon" size={20} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.sectionKicker}>Digital Scouting Passport</Text>
+            <Text style={styles.passportTitle}>{passport.metrics.passportStatus}</Text>
+          </View>
+          <View style={styles.verificationScorePill}>
+            <Text style={styles.verificationScoreVal}>{passport.verificationScore}%</Text>
+            <Text style={styles.verificationScoreLbl}>Verified</Text>
+          </View>
+        </View>
+
+        <View style={styles.passportDetailList}>
+          <View style={styles.passportDetailRow}>
+            <Text style={styles.passportFieldLabel}>Talent ID / FIFA Code</Text>
+            <Text style={styles.passportFieldValue}>{passport.metrics.fifaId}</Text>
+          </View>
+          <View style={styles.passportDetailRow}>
+            <Text style={styles.passportFieldLabel}>Verification Tier</Text>
+            <Text style={styles.passportFieldValue}>{passport.metrics.verificationTier}</Text>
+          </View>
+          <View style={styles.passportDetailRow}>
+            <Text style={styles.passportFieldLabel}>Work Permit / Visa</Text>
+            <Text style={styles.passportFieldValue}>{passport.metrics.workPermitStatus}</Text>
+          </View>
+          <View style={styles.passportDetailRow}>
+            <Text style={styles.passportFieldLabel}>Representation</Text>
+            <Text style={styles.passportFieldValue}>{passport.metrics.agencyRepresentation}</Text>
+          </View>
+          <View style={styles.passportDetailRow}>
+            <Text style={styles.passportFieldLabel}>Medical Status</Text>
+            <Text style={styles.passportFieldValue}>{passport.metrics.medicalClearance}</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.sharePassportButton} onPress={handleSharePassport}>
+          <Ionicons name="share-social-outline" size={17} color="#FFFFFF" />
+          <Text style={styles.sharePassportText}>Share Verified Scout Passport</Text>
+        </TouchableOpacity>
+
+        {shareNotice ? (
+          <View style={styles.shareNoticeBox}>
+            <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+            <Text style={styles.shareNoticeText}>{shareNotice}</Text>
+          </View>
+        ) : null}
+      </View>
+
+      {/* Career Timeline & Club Appearances */}
+      <View style={styles.careerTimelineCard}>
+        <View style={styles.careerHeader}>
+          <View>
+            <Text style={styles.sectionKicker}>Career Pathway</Text>
+            <Text style={styles.sectionTitle}>Club History & Milestones</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.addMilestoneToggle}
+            onPress={() => setShowAddMilestone(!showAddMilestone)}
+          >
+            <Ionicons name={showAddMilestone ? 'close' : 'add'} size={18} color={colors.primary} />
+            <Text style={styles.addMilestoneToggleText}>{showAddMilestone ? 'Cancel' : 'Add'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {showAddMilestone ? (
+          <View style={styles.addMilestoneForm}>
+            <TextInput
+              style={styles.milestoneInput}
+              placeholder="Club / Academy Name (e.g. FC Midtjylland)"
+              placeholderTextColor="#94A3B8"
+              value={newClub}
+              onChangeText={setNewClub}
+            />
+            <TextInput
+              style={styles.milestoneInput}
+              placeholder="Role / Squad (e.g. U19 Starter / First Team Bridge)"
+              placeholderTextColor="#94A3B8"
+              value={newRole}
+              onChangeText={setNewRole}
+            />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TextInput
+                style={[styles.milestoneInput, { flex: 1 }]}
+                placeholder="Period (e.g. 2024-2025)"
+                placeholderTextColor="#94A3B8"
+                value={newPeriod}
+                onChangeText={setNewPeriod}
+              />
+              <TextInput
+                style={[styles.milestoneInput, { width: 80 }]}
+                placeholder="Apps"
+                placeholderTextColor="#94A3B8"
+                value={newApps}
+                onChangeText={setNewApps}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={[styles.milestoneInput, { width: 80 }]}
+                placeholder="Goals"
+                placeholderTextColor="#94A3B8"
+                value={newGoals}
+                onChangeText={setNewGoals}
+                keyboardType="numeric"
+              />
+            </View>
+            <TouchableOpacity style={styles.submitMilestoneBtn} onPress={handleAddMilestone}>
+              <Text style={styles.submitMilestoneText}>Add to Passport</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        <View style={styles.milestonesList}>
+          {passport.milestones.map((m) => (
+            <View key={m.id} style={styles.milestoneItem}>
+              <View style={styles.milestoneDot} />
+              <View style={{ flex: 1 }}>
+                <View style={styles.milestoneTopLine}>
+                  <Text style={styles.milestoneClub}>{m.club}</Text>
+                  <View style={styles.verifiedTag}>
+                    <Ionicons name="checkmark-circle" size={13} color={colors.primary} />
+                    <Text style={styles.verifiedTagText}>Verified</Text>
+                  </View>
+                </View>
+                <Text style={styles.milestoneRole}>{m.role} • {m.period}</Text>
+                <Text style={styles.milestoneStats}>
+                  {m.appearances} appearances • {m.goals} goals • {m.assists} assists ({m.category})
+                </Text>
+              </View>
+            </View>
+          ))}
         </View>
       </View>
 
@@ -350,6 +570,233 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     marginTop: 3,
+  },
+  passportCard: {
+    marginTop: 16,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 18,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  passportHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+  },
+  passportBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  passportTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  sectionKicker: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  verificationScorePill: {
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+    alignItems: 'center',
+  },
+  verificationScoreVal: {
+    color: '#0D5C3A',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  verificationScoreLbl: {
+    color: '#059669',
+    fontSize: 9,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  passportDetailList: {
+    gap: 8,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.surfaceAlt,
+    marginBottom: 14,
+  },
+  passportDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  passportFieldLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  passportFieldValue: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  sharePassportButton: {
+    minHeight: 46,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  sharePassportText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  shareNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#ECFDF5',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  shareNoticeText: {
+    color: '#0D5C3A',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  careerTimelineCard: {
+    marginTop: 16,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 18,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  careerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  addMilestoneToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.surfaceAlt,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  addMilestoneToggleText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  addMilestoneForm: {
+    backgroundColor: colors.surfaceAlt,
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 14,
+    gap: 8,
+  },
+  milestoneInput: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  submitMilestoneBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  submitMilestoneText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  milestonesList: {
+    gap: 12,
+  },
+  milestoneItem: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceAlt,
+  },
+  milestoneDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.primary,
+    marginTop: 5,
+  },
+  milestoneTopLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  milestoneClub: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  verifiedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  verifiedTagText: {
+    color: colors.primary,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  milestoneRole: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  milestoneStats: {
+    color: colors.ink,
+    fontSize: 11,
+    marginTop: 3,
+    fontWeight: '500',
   },
   sectionHeader: {
     marginTop: 22,

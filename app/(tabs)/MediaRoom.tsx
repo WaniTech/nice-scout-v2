@@ -443,15 +443,6 @@ export default function MediaRoomPage() {
   );
 }
 
-function SummaryCard({ value, label }: { value: string; label: string }) {
-  return (
-    <View style={styles.summaryCard}>
-      <Text style={styles.summaryValue}>{value}</Text>
-      <Text style={styles.summaryLabel}>{label}</Text>
-    </View>
-  );
-}
-
 function MediaInput({
   label,
   value,

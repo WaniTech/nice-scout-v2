@@ -2,13 +2,15 @@ import {
     BenchmarkReport,
     Opportunity,
     OpportunityStage,
+    PassportMetrics,
     PillarScores,
     PlayerClip,
     PlayerClipStatus,
     PlayerMessage,
+    PlayerPassport,
     ScoutActivityReport,
     TrialBooking,
-    TrialStatus,
+    TrialStatus
 } from '@/constants/playerPlatform';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -516,5 +518,37 @@ export function toggleTrialChecklistItem(
   return request<TrialBooking>(`/trials/${playerId}/${trialId}/checklist/${itemId}`, {
     method: 'PATCH',
     body: JSON.stringify({ completed }),
+  });
+}
+
+export function getPlayerPassport(playerId: string) {
+  return request<PlayerPassport>(`/passport/${playerId}`);
+}
+
+export function addCareerMilestone(
+  playerId: string,
+  payload: {
+    club: string;
+    role: string;
+    period: string;
+    appearances?: number;
+    goals?: number;
+    assists?: number;
+    category?: string;
+  }
+) {
+  return request<PlayerPassport>(`/passport/${playerId}/milestones`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updatePassportMetrics(
+  playerId: string,
+  payload: Partial<PassportMetrics>
+) {
+  return request<PlayerPassport>(`/passport/${playerId}/metrics`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
   });
 }
