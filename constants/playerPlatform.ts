@@ -580,6 +580,92 @@ export const defaultPassport: PlayerPassport = {
   updatedAt: '2026-08-30T10:00:00.000Z',
 };
 
+export type DealStatus = 'Offered' | 'Countered' | 'UnderReview' | 'Agreed' | 'Declined' | 'Signed';
+
+export type NegotiationEntry = {
+  id: string;
+  sender: 'club' | 'player';
+  author: string;
+  action: string;
+  baseSalaryMonthly: number;
+  notes: string;
+  timestamp: string;
+};
+
+export type DealFinancials = {
+  months: number;
+  guaranteedTotal: number;
+  projectedTotal: number;
+  monthlyNetEstimate: number;
+  dealScore: number;
+};
+
+export type ContractDeal = {
+  id: string;
+  playerId: string;
+  opportunityId: string;
+  club: string;
+  league: string;
+  contractType: string;
+  durationYears: number;
+  baseSalaryMonthly: number;
+  currency: string;
+  signingBonus: number;
+  appearanceBonus: number;
+  goalAssistBonus: number;
+  housingStipendMonthly: number;
+  releaseClause: number;
+  status: DealStatus;
+  scoutContact: string;
+  signature?: string;
+  signedAt?: string;
+  negotiationHistory: NegotiationEntry[];
+  financials?: DealFinancials;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const defaultDeals: ContractDeal[] = [
+  {
+    id: 'deal-1',
+    playerId: 'demo-player',
+    opportunityId: '1',
+    club: 'FC Midtjylland',
+    league: 'Danish Superliga Academy Bridge',
+    contractType: 'First Team Pathway / Development Pro',
+    durationYears: 2,
+    baseSalaryMonthly: 4200,
+    currency: 'EUR',
+    signingBonus: 8000,
+    appearanceBonus: 400,
+    goalAssistBonus: 300,
+    housingStipendMonthly: 850,
+    releaseClause: 350000,
+    status: 'Offered',
+    scoutContact: 'Mikkel Soren (Nordic Recruitment)',
+    negotiationHistory: [
+      {
+        id: 'hist-1',
+        sender: 'club',
+        author: 'Mikkel Soren',
+        action: 'Initial Offer Submitted',
+        baseSalaryMonthly: 4200,
+        notes: '2-year development contract with senior cup call-up incentives.',
+        timestamp: '2026-08-28T14:00:00.000Z',
+      },
+    ],
+    financials: {
+      months: 24,
+      guaranteedTotal: 129200,
+      projectedTotal: 140200,
+      monthlyNetEstimate: 2856,
+      dealScore: 92,
+    },
+    createdAt: '2026-08-28T14:00:00.000Z',
+    updatedAt: '2026-08-29T10:30:00.000Z',
+  },
+];
+
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);

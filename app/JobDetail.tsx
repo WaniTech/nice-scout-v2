@@ -1,6 +1,8 @@
 import {
     applicationSteps,
     colors,
+    ContractDeal,
+    defaultDeals,
     defaultTrialBookings,
     findOpportunity,
     OpportunityStage,
@@ -12,18 +14,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
     deleteApplication,
     getPlayerApplications,
+    getPlayerDeals,
     getPlayerTrials,
     PlayerApplication,
     rsvpTrialBooking,
     saveApplication,
     scheduleTrialBooking,
+    signContractDeal,
+    submitDealCounter,
     toggleTrialChecklistItem,
     updateApplicationStage,
 } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const timeSlotOptions = [
   'Morning Session (09:30 - 12:00 CET)',
@@ -39,6 +44,10 @@ export default function OpportunityDetail() {
   const [stage, setStage] = useState<OpportunityStage>(opportunity?.stage ?? 'New');
   const [application, setApplication] = useState<PlayerApplication | null>(null);
   const [trialBooking, setTrialBooking] = useState<TrialBooking | null>(null);
+  const [deal, setDeal] = useState<ContractDeal | null>(null);
+  const [showCounterModal, setShowCounterModal] = useState(false);
+  const [counterSalary, setCounterSalary] = useState('4800');
+  const [counterNotes, setCounterNotes] = useState('Requesting adjusted monthly wage to account for travel relocation.');
   const [selectedSlot, setSelectedSlot] = useState(timeSlotOptions[0]);
   const [syncNotice, setSyncNotice] = useState('');
 
@@ -52,9 +61,10 @@ export default function OpportunityDetail() {
       if (!opportunityId) return;
 
       try {
-        const [applications, trials] = await Promise.all([
+        const [applications, trials, deals] = await Promise.all([
           getPlayerApplications(playerId),
           getPlayerTrials(playerId),
+          getPlayerDeals(playerId),
         ]);
 
         if (ignore) return;
@@ -72,9 +82,19 @@ export default function OpportunityDetail() {
         } else if (opportunity?.stage === 'Trial booked') {
           setTrialBooking(defaultTrialBookings[0]);
         }
+
+        const foundDeal = deals.find((d) => d.opportunityId === opportunityId);
+        if (foundDeal) {
+          setDeal(foundDeal);
+        } else if (opportunity?.stage === 'Offer talks') {
+          setDeal(defaultDeals[0]);
+        }
       } catch {
         if (!ignore && opportunity?.stage === 'Trial booked') {
           setTrialBooking(defaultTrialBookings[0]);
+        }
+        if (!ignore && opportunity?.stage === 'Offer talks') {
+          setDeal(defaultDeals[0]);
         }
       }
     }
@@ -175,6 +195,36 @@ export default function OpportunityDetail() {
           checklist: prev.checklist.map((c) => (c.id === item.id ? { ...c, completed: !c.completed } : c)),
         };
       });
+    }
+  };
+
+  const handleCounterOffer = async () => {
+    if (!deal || !counterSalary) return;
+    try {
+      const updated = await submitDealCounter(playerId, deal.id, {
+        counterSalaryMonthly: Number(counterSalary),
+        notes: counterNotes,
+      });
+      setDeal(updated);
+      setShowCounterModal(false);
+      setSyncNotice(`Counter-offer of €${counterSalary}/mo submitted to club recruitment desk.`);
+    } catch {
+      setSyncNotice('Could not submit counter-offer. Please check your connection.');
+    }
+  };
+
+  const handleSignDeal = async () => {
+    if (!deal) return;
+    try {
+      const signed = await signContractDeal(playerId, deal.id, {
+        signature: `${currentUser?.name || 'Alex Rivera'} (Verified Digital Signature)`,
+        confirmationNotes: 'Official contract terms accepted and digitally executed.',
+      });
+      setDeal(signed);
+      await saveStage('Offer talks');
+      setSyncNotice('Contract officially signed and registered with club registry!');
+    } catch {
+      setSyncNotice('Could not sign contract deal.');
     }
   };
 
@@ -331,6 +381,159 @@ export default function OpportunityDetail() {
             </View>
           ) : null}
         </View>
+
+        {/* Contract Offer & Negotiation Deal Room Card */}
+        {deal ? (
+          <View style={styles.dealPortalCard}>
+            <View style={styles.portalHeader}>
+              <View style={[styles.portalIcon, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
+                <Ionicons name="document-text" size={22} color={colors.accent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.portalKicker}>Formal Recruitment Offer</Text>
+                <Text style={styles.portalTitle}>Contract Terms Sheet</Text>
+              </View>
+              <View
+                style={[
+                  styles.rsvpStatusBadge,
+                  deal.status === 'Signed'
+                    ? styles.badgeConfirmed
+                    : deal.status === 'Countered'
+                    ? styles.badgePending
+                    : styles.badgeOffered,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.rsvpStatusText,
+                    deal.status === 'Signed'
+                      ? styles.badgeTextConfirmed
+                      : deal.status === 'Countered'
+                      ? styles.badgeTextPending
+                      : styles.badgeTextOffered,
+                  ]}
+                >
+                  {deal.status}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.dealTypeTitle}>{deal.contractType}</Text>
+            <Text style={styles.portalMeta}>
+              Duration: <Text style={{ fontWeight: '800', color: colors.ink }}>{deal.durationYears} Years</Text> • Representative: {deal.scoutContact}
+            </Text>
+
+            {/* Financial Breakdown Grid */}
+            <View style={styles.dealFinancialGrid}>
+              <View style={styles.financialCard}>
+                <Text style={styles.financialVal}>€{deal.baseSalaryMonthly.toLocaleString()}/mo</Text>
+                <Text style={styles.financialLbl}>Base Salary</Text>
+              </View>
+              <View style={styles.financialCard}>
+                <Text style={styles.financialVal}>€{deal.signingBonus.toLocaleString()}</Text>
+                <Text style={styles.financialLbl}>Signing Bonus</Text>
+              </View>
+              <View style={styles.financialCard}>
+                <Text style={styles.financialVal}>€{deal.housingStipendMonthly}/mo</Text>
+                <Text style={styles.financialLbl}>Housing Stipend</Text>
+              </View>
+              <View style={styles.financialCard}>
+                <Text style={styles.financialVal}>€{deal.financials?.projectedTotal.toLocaleString() || '140,000'}</Text>
+                <Text style={styles.financialLbl}>Projected Value</Text>
+              </View>
+            </View>
+
+            {/* Negotiation History Log */}
+            {deal.negotiationHistory && deal.negotiationHistory.length > 0 ? (
+              <View style={styles.negotiationHistorySection}>
+                <Text style={styles.historyTitle}>Negotiation Audit Trail</Text>
+                {deal.negotiationHistory.map((entry) => (
+                  <View key={entry.id} style={styles.historyRow}>
+                    <View style={styles.historyDot} />
+                    <View style={{ flex: 1 }}>
+                      <View style={styles.historyTopLine}>
+                        <Text style={styles.historyAction}>{entry.action}</Text>
+                        <Text style={styles.historyAuthor}>{entry.author}</Text>
+                      </View>
+                      <Text style={styles.historyNotes}>{entry.notes}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {/* Counter Offer Modal / Expandable Form */}
+            {showCounterModal ? (
+              <View style={styles.counterForm}>
+                <Text style={styles.counterFormTitle}>Submit Contract Counter-Proposal</Text>
+                <View style={styles.fieldRow}>
+                  <Text style={styles.fieldLabel}>Requested Monthly Wage (€):</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={counterSalary}
+                    onChangeText={setCounterSalary}
+                    keyboardType="numeric"
+                    placeholder="e.g. 4800"
+                  />
+                </View>
+                <View style={styles.fieldRow}>
+                  <Text style={styles.fieldLabel}>Negotiation Notes / Clauses:</Text>
+                  <TextInput
+                    style={[styles.fieldInput, { height: 60 }]}
+                    value={counterNotes}
+                    onChangeText={setCounterNotes}
+                    multiline
+                    placeholder="Enter bonus requests or release clause adjustments..."
+                  />
+                </View>
+                <View style={styles.counterActionRow}>
+                  <TouchableOpacity
+                    style={[styles.counterBtn, { backgroundColor: colors.surfaceAlt }]}
+                    onPress={() => setShowCounterModal(false)}
+                  >
+                    <Text style={[styles.counterBtnText, { color: colors.muted }]}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.counterBtn, { backgroundColor: colors.primary }]}
+                    onPress={handleCounterOffer}
+                  >
+                    <Text style={styles.counterBtnText}>Submit Counter</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : null}
+
+            {/* Deal Action Buttons */}
+            {deal.status !== 'Signed' ? (
+              <View style={styles.dealActionRow}>
+                <TouchableOpacity
+                  style={[styles.dealBtn, styles.dealSignBtn]}
+                  onPress={handleSignDeal}
+                >
+                  <Ionicons name="pencil" size={16} color="#FFFFFF" />
+                  <Text style={styles.dealBtnText}>Accept & Sign Deal</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.dealBtn, styles.dealCounterBtn]}
+                  onPress={() => setShowCounterModal(!showCounterModal)}
+                >
+                  <Ionicons name="chatbubbles-outline" size={16} color={colors.accent} />
+                  <Text style={[styles.dealBtnText, { color: colors.accent }]}>
+                    {showCounterModal ? 'Close Form' : 'Counter Terms'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.signedBanner}>
+                <Ionicons name="checkmark-circle" size={20} color="#15803D" />
+                <Text style={styles.signedBannerText}>
+                  Digitally Executed: {deal.signature || 'Alex Rivera (Verified)'}
+                </Text>
+              </View>
+            )}
+          </View>
+        ) : null}
 
         <View style={styles.infoGrid}>
           <DetailItem icon="location-outline" label="Location" value={`${opportunity.city}, ${opportunity.country}`} />
@@ -920,5 +1123,190 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '900',
     marginTop: 10,
+  },
+  dealPortalCard: {
+    marginTop: 16,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 18,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  badgeOffered: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  badgeTextOffered: {
+    color: '#2563EB',
+  },
+  dealTypeTitle: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  dealFinancialGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginVertical: 14,
+  },
+  financialCard: {
+    width: '48.5%',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    padding: 12,
+    justifyContent: 'center',
+  },
+  financialVal: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  financialLbl: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  negotiationHistorySection: {
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceAlt,
+    paddingTop: 12,
+    marginBottom: 14,
+    gap: 8,
+  },
+  historyTitle: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'flex-start',
+  },
+  historyDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    marginTop: 5,
+  },
+  historyTopLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  historyAction: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  historyAuthor: {
+    color: colors.muted,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  historyNotes: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  counterForm: {
+    backgroundColor: colors.surfaceAlt,
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 14,
+    gap: 8,
+  },
+  counterFormTitle: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  fieldRow: {
+    gap: 4,
+  },
+  fieldLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  fieldInput: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  counterActionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  counterBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  counterBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  dealActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  dealBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  dealSignBtn: {
+    backgroundColor: colors.primary,
+  },
+  dealCounterBtn: {
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  dealBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  signedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#DCFCE7',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  signedBannerText: {
+    color: '#15803D',
+    fontSize: 12,
+    fontWeight: '800',
   },
 });

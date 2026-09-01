@@ -1,5 +1,6 @@
 import {
     BenchmarkReport,
+    ContractDeal,
     Opportunity,
     OpportunityStage,
     PassportMetrics,
@@ -549,6 +550,44 @@ export function updatePassportMetrics(
 ) {
   return request<PlayerPassport>(`/passport/${playerId}/metrics`, {
     method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getPlayerDeals(playerId: string) {
+  return request<ContractDeal[]>(`/deals/${playerId}`);
+}
+
+export function getDealDetails(playerId: string, dealId: string) {
+  return request<ContractDeal>(`/deals/${playerId}/${dealId}`);
+}
+
+export function submitDealCounter(
+  playerId: string,
+  dealId: string,
+  payload: {
+    counterSalaryMonthly: number;
+    counterSigningBonus?: number;
+    counterDurationYears?: number;
+    notes?: string;
+  }
+) {
+  return request<ContractDeal>(`/deals/${playerId}/${dealId}/counter`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function signContractDeal(
+  playerId: string,
+  dealId: string,
+  payload: {
+    signature?: string;
+    confirmationNotes?: string;
+  } = {}
+) {
+  return request<ContractDeal>(`/deals/${playerId}/${dealId}/sign`, {
+    method: 'PATCH',
     body: JSON.stringify(payload),
   });
 }

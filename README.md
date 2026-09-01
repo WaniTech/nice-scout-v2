@@ -29,6 +29,12 @@ Right now you can use the app to:
 - **Live Scout Chat & Direct Negotiation Channel**: Upgraded `app/MessageDetail.tsx` with instant WebSocket message dispatch, live typing indicators, and quick attachment drawers for video clips and availability windows.
 - **Trial Application Pipeline & Recruitment Lifecycle Tracker**: Interactive scouting pipeline in `app/(tabs)/Myjobs.tsx` and `app/JobDetail.tsx` with multi-stage status management (Saved, Applied, Trial Booked, Offer Talks), urgency indicators, and recruitment milestone tracking.
 - **Scout Video Reel & Performance Media Portfolio**: Dedicated recruitment video asset manager in `app/(tabs)/MediaRoom.tsx` with pipeline status tracking (`Draft`, `Scout-ready`, `Sent`), scout view metrics, tagging taxonomy, and REST API sync.
+- **Offline Sync Queue & Data Resilience Engine**: Mutation queuing and replay engine in `services/api.ts` with exponential backoff retry logic, offline status indicator banners, and optimistic local state reconciliation.
+- **CI Pipeline Hardening & Type Safety Architecture**: Strict TypeScript compilation and lint validation across all Expo Router screens and contexts, eliminating runtime type discrepancies and hardening WebSocket payload narrowing.
+- **Scout Analytics Radar & Performance Intelligence Hub**: Dynamic 4-pillar attribute evaluation (Physical, Technical, Tactical, Mental), academy benchmark comparisons against European development leagues, and real-time scout engagement metrics in `app/(tabs)/PlayerDashboard.tsx`.
+- **Interactive Trial Scheduling & Scout RSVP Engine**: Full-stack trial slot booking and logistics manager in `app/JobDetail.tsx` with RSVP status transitions (`Confirmed`, `Rescheduled`, `Declined`), interactive time slot pickers, and required preparation checklists.
+- **Player Career Passport & Verified Scout CV Engine**: Digital scouting passport in `app/(tabs)/Profile.tsx` featuring verification tier scoring, FIFA Talent ID tracking, EU work permit validation, verified career milestone timelines, and shareable scout credentials.
+- **Contract Offer Terms & Deal Negotiation Room Engine**: Dedicated contract negotiation deal room in `app/JobDetail.tsx` with monthly base wage breakdowns, signing and performance bonus projections, negotiation audit trail, structured counter-proposal submission, and digital contract execution.
 
 ## Work Hours
 
