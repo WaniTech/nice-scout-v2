@@ -5,18 +5,21 @@ import {
     defaultPillars,
     defaultPlayerProfile,
     defaultScoutActivityReport,
+    defaultWatchlistReport,
     mediaClips,
     opportunities,
     performanceStats,
     PillarScores,
     profileTasks,
     ScoutActivityReport,
+    WatchlistReport,
 } from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
 import {
     getPlayerAnalytics,
     getPlayerBenchmarks,
     getPlayerScoutActivity,
+    getPlayerWatchlistReport,
 } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -49,6 +52,7 @@ export default function PlayerDashboard() {
   const [pillars, setPillars] = useState<PillarScores>(defaultPillars);
   const [benchmarkReport, setBenchmarkReport] = useState<BenchmarkReport>(defaultBenchmarkReport);
   const [scoutActivity, setScoutActivity] = useState<ScoutActivityReport>(defaultScoutActivityReport);
+  const [watchlistReport, setWatchlistReport] = useState<WatchlistReport>(defaultWatchlistReport);
 
   const playerName = currentUser?.name ?? defaultPlayerProfile.name;
   const firstName = playerName.split(' ')[0];
@@ -59,10 +63,11 @@ export default function PlayerDashboard() {
 
     async function loadIntelligenceData() {
       try {
-        const [radarRes, benchmarkRes, scoutRes] = await Promise.allSettled([
+        const [radarRes, benchmarkRes, scoutRes, watchlistRes] = await Promise.allSettled([
           getPlayerAnalytics(playerId),
           getPlayerBenchmarks(playerId, defaultPlayerProfile.position, selectedBaseline),
           getPlayerScoutActivity(playerId),
+          getPlayerWatchlistReport(playerId),
         ]);
 
         if (ignore) return;
@@ -75,6 +80,9 @@ export default function PlayerDashboard() {
         }
         if (scoutRes.status === 'fulfilled' && scoutRes.value?.totalViews) {
           setScoutActivity(scoutRes.value);
+        }
+        if (watchlistRes.status === 'fulfilled' && watchlistRes.value?.watchlists) {
+          setWatchlistReport(watchlistRes.value);
         }
       } catch {
         // Fallback to defaults
@@ -313,6 +321,78 @@ export default function PlayerDashboard() {
                 <Text style={styles.scoutActionDetail}>{entry.action}</Text>
               </View>
               <Text style={styles.scoutTimeText}>{entry.time}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Scout Watchlist & Talent Shortlist Network */}
+      <View style={styles.watchlistCard}>
+        <View style={styles.radarHeader}>
+          <View>
+            <Text style={styles.sectionKicker}>Talent Watchlist Network</Text>
+            <Text style={styles.sectionTitle}>Scout Shortlists & Inquiries</Text>
+          </View>
+          <View style={styles.interestIndexBadge}>
+            <Text style={styles.interestIndexValue}>{watchlistReport.metrics.interestIndex}%</Text>
+            <Text style={styles.interestIndexLabel}>Interest</Text>
+          </View>
+        </View>
+
+        {/* Tier Distribution Bar */}
+        <View style={styles.tierDistributionRow}>
+          <View style={[styles.tierPill, { backgroundColor: '#DCFCE7', borderColor: '#86EFAC' }]}>
+            <Text style={[styles.tierPillText, { color: '#15803D' }]}>
+              {watchlistReport.metrics.priorityCount} Priority Targets
+            </Text>
+          </View>
+          <View style={[styles.tierPill, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
+            <Text style={[styles.tierPillText, { color: '#2563EB' }]}>
+              {watchlistReport.metrics.monitoredCount} Monitored
+            </Text>
+          </View>
+          <View style={[styles.tierPill, { backgroundColor: '#F3F4F6', borderColor: '#E5E7EB' }]}>
+            <Text style={[styles.tierPillText, { color: '#4B5563' }]}>
+              {watchlistReport.metrics.extendedCount} Extended
+            </Text>
+          </View>
+        </View>
+
+        {/* Active Shortlisted Scouts */}
+        <View style={styles.watchlistItemsList}>
+          {watchlistReport.watchlists.slice(0, 3).map((w) => (
+            <View key={w.id} style={styles.watchlistItem}>
+              <View style={styles.watchlistDot} />
+              <View style={{ flex: 1 }}>
+                <View style={styles.watchlistTopLine}>
+                  <Text style={styles.watchlistScoutName}>{w.scoutName} ({w.club})</Text>
+                  <View
+                    style={[
+                      styles.tierTag,
+                      w.tier === 'Priority Target'
+                        ? styles.tierTagPriority
+                        : w.tier === 'Monitored'
+                        ? styles.tierTagMonitored
+                        : styles.tierTagExtended,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.tierTagText,
+                        w.tier === 'Priority Target'
+                          ? styles.tierTextPriority
+                          : w.tier === 'Monitored'
+                          ? styles.tierTextMonitored
+                          : styles.tierTextExtended,
+                      ]}
+                    >
+                      {w.tier}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.watchlistRole}>{w.role} • {w.league}</Text>
+                <Text style={styles.watchlistNotes}>{w.notes}</Text>
+              </View>
             </View>
           ))}
         </View>
@@ -833,6 +913,122 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 11,
     fontWeight: '600',
+  },
+  watchlistCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  interestIndexBadge: {
+    minWidth: 58,
+    borderRadius: 12,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  interestIndexValue: {
+    color: '#B45309',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  interestIndexLabel: {
+    color: '#D97706',
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  tierDistributionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  tierPill: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tierPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  watchlistItemsList: {
+    gap: 12,
+  },
+  watchlistItem: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceAlt,
+  },
+  watchlistDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    marginTop: 6,
+  },
+  watchlistTopLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  watchlistScoutName: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  tierTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  tierTagPriority: {
+    backgroundColor: '#DCFCE7',
+  },
+  tierTagMonitored: {
+    backgroundColor: '#EFF6FF',
+  },
+  tierTagExtended: {
+    backgroundColor: '#F3F4F6',
+  },
+  tierTagText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  tierTextPriority: {
+    color: '#15803D',
+  },
+  tierTextMonitored: {
+    color: '#2563EB',
+  },
+  tierTextExtended: {
+    color: '#4B5563',
+  },
+  watchlistRole: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  watchlistNotes: {
+    color: colors.ink,
+    fontSize: 12,
+    marginTop: 4,
+    lineHeight: 16,
+    fontWeight: '500',
   },
   readinessPanel: {
     marginHorizontal: 16,

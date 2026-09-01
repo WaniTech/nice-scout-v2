@@ -6,6 +6,7 @@ const { createPlayerMatchRouter } = require('./routes/playerMatch');
 const { createTrialsRouter } = require('./routes/trials');
 const { createPassportRouter } = require('./routes/passport');
 const { createDealsRouter } = require('./routes/deals');
+const { createWatchlistRouter } = require('./routes/watchlist');
 
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -55,6 +56,7 @@ function createApp({ store, socketService } = {}) {
         'trial-scheduling',
         'player-passport',
         'deal-negotiation',
+        'scout-watchlist',
         'socket-broadcast',
       ],
       timestamp: new Date().toISOString(),
@@ -107,6 +109,7 @@ function createApp({ store, socketService } = {}) {
   app.use('/api/trials', createTrialsRouter(store, socketService));
   app.use('/api/passport', createPassportRouter(store, socketService));
   app.use('/api/deals', createDealsRouter(store, socketService));
+  app.use('/api/watchlist', createWatchlistRouter(store, socketService));
 
   return app;
 }

@@ -35,6 +35,7 @@ Right now you can use the app to:
 - **Interactive Trial Scheduling & Scout RSVP Engine**: Full-stack trial slot booking and logistics manager in `app/JobDetail.tsx` with RSVP status transitions (`Confirmed`, `Rescheduled`, `Declined`), interactive time slot pickers, and required preparation checklists.
 - **Player Career Passport & Verified Scout CV Engine**: Digital scouting passport in `app/(tabs)/Profile.tsx` featuring verification tier scoring, FIFA Talent ID tracking, EU work permit validation, verified career milestone timelines, and shareable scout credentials.
 - **Contract Offer Terms & Deal Negotiation Room Engine**: Dedicated contract negotiation deal room in `app/JobDetail.tsx` with monthly base wage breakdowns, signing and performance bonus projections, negotiation audit trail, structured counter-proposal submission, and digital contract execution.
+- **Scout Watchlist & Talent Shortlist Network Engine**: Scout watchlist intelligence in `app/(tabs)/PlayerDashboard.tsx` with tier classifications (Priority Target, Monitored, Extended List), recruitment interest score index, scout inquiries feed, and real-time shortlist updates.
 
 ## Work Hours
 

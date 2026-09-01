@@ -11,7 +11,10 @@ import {
     PlayerPassport,
     ScoutActivityReport,
     TrialBooking,
-    TrialStatus
+    TrialStatus,
+    WatchlistEntry,
+    WatchlistReport,
+    WatchlistTier,
 } from '@/constants/playerPlatform';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -587,6 +590,43 @@ export function signContractDeal(
   } = {}
 ) {
   return request<ContractDeal>(`/deals/${playerId}/${dealId}/sign`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getPlayerWatchlistReport(playerId: string) {
+  return request<WatchlistReport>(`/watchlist/${playerId}`);
+}
+
+export function addScoutToWatchlist(
+  playerId: string,
+  payload: {
+    scoutName: string;
+    club: string;
+    league?: string;
+    role?: string;
+    tier?: WatchlistTier;
+    notes?: string;
+    tags?: string[];
+  }
+) {
+  return request<WatchlistEntry>(`/watchlist/${playerId}`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateWatchlistEntry(
+  playerId: string,
+  entryId: string,
+  payload: {
+    tier?: WatchlistTier;
+    notes?: string;
+    inquiryStatus?: string;
+  }
+) {
+  return request<WatchlistEntry>(`/watchlist/${playerId}/${entryId}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   });

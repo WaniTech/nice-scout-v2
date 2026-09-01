@@ -666,6 +666,154 @@ export const defaultDeals: ContractDeal[] = [
   },
 ];
 
+export type WatchlistTier = 'Priority Target' | 'Monitored' | 'Extended List';
+
+export type WatchlistEntry = {
+  id: string;
+  playerId: string;
+  scoutId: string;
+  scoutName: string;
+  club: string;
+  league: string;
+  role: string;
+  tier: WatchlistTier;
+  addedDate: string;
+  lastViewedAt: string;
+  notes: string;
+  tags: string[];
+  inquiryStatus: string;
+};
+
+export type ScoutInquiry = {
+  id: string;
+  playerId: string;
+  scoutName: string;
+  club: string;
+  type: string;
+  status: string;
+  message: string;
+  date: string;
+};
+
+export type WatchlistMetrics = {
+  totalScouts: number;
+  priorityCount: number;
+  monitoredCount: number;
+  extendedCount: number;
+  activeLeaguesCount: number;
+  activeLeagues: string[];
+  interestIndex: number;
+};
+
+export type WatchlistReport = {
+  playerId: string;
+  metrics: WatchlistMetrics;
+  watchlists: WatchlistEntry[];
+  inquiries: ScoutInquiry[];
+};
+
+export const defaultWatchlistReport: WatchlistReport = {
+  playerId: 'demo-player',
+  metrics: {
+    totalScouts: 4,
+    priorityCount: 2,
+    monitoredCount: 1,
+    extendedCount: 1,
+    activeLeaguesCount: 4,
+    activeLeagues: [
+      'Danish Superliga Academy bridge',
+      'Eredivisie U23 pathway',
+      'German development squad',
+      'Liga Portugal recruitment group',
+    ],
+    interestIndex: 88,
+  },
+  watchlists: [
+    {
+      id: 'watch-1',
+      playerId: 'demo-player',
+      scoutId: 'scout-101',
+      scoutName: 'Mikkel Soren',
+      club: 'FC Midtjylland',
+      league: 'Danish Superliga Academy bridge',
+      role: 'Head of Nordic Recruitment',
+      tier: 'Priority Target',
+      addedDate: '2026-08-15',
+      lastViewedAt: '2026-08-31T18:20:00.000Z',
+      notes: 'Primary target for wide attacking vacancy. Attending trial assessment.',
+      tags: ['First Team Pathway', 'Trialist', 'Immediate Fit'],
+      inquiryStatus: 'Active Conversation',
+    },
+    {
+      id: 'watch-2',
+      playerId: 'demo-player',
+      scoutId: 'scout-102',
+      scoutName: 'Noah Janssen',
+      club: 'AZ Alkmaar',
+      league: 'Eredivisie U23 pathway',
+      role: 'Lead Talent Scout',
+      tier: 'Monitored',
+      addedDate: '2026-08-20',
+      lastViewedAt: '2026-08-30T14:10:00.000Z',
+      notes: 'Tracking left-side adaptability and recovery run GPS outputs.',
+      tags: ['U23 Review', 'GPS Monitored'],
+      inquiryStatus: 'Clips Requested',
+    },
+    {
+      id: 'watch-3',
+      playerId: 'demo-player',
+      scoutId: 'scout-103',
+      scoutName: 'Lena Weiss',
+      club: 'SC Freiburg II',
+      league: 'German development squad',
+      role: 'DACH Scouting Director',
+      tier: 'Priority Target',
+      addedDate: '2026-08-24',
+      lastViewedAt: '2026-08-31T09:45:00.000Z',
+      notes: 'Shortlisted for development squad. Reviewing July pressing data.',
+      tags: ['High Press', 'Shortlisted'],
+      inquiryStatus: 'Data Review',
+    },
+    {
+      id: 'watch-4',
+      playerId: 'demo-player',
+      scoutId: 'scout-104',
+      scoutName: 'Tiago Rocha',
+      club: 'Vitoria SC',
+      league: 'Liga Portugal recruitment group',
+      role: 'Iberian Talent ID Desk',
+      tier: 'Extended List',
+      addedDate: '2026-08-28',
+      lastViewedAt: '2026-08-29T16:00:00.000Z',
+      notes: 'Direct transition winger profile flagged in Iberian talent query.',
+      tags: ['Transition Threat', 'Portugal Trial'],
+      inquiryStatus: 'Open Invitation',
+    },
+  ],
+  inquiries: [
+    {
+      id: 'inq-1',
+      playerId: 'demo-player',
+      scoutName: 'Mikkel Soren',
+      club: 'FC Midtjylland',
+      type: 'Trial Availability Confirmation',
+      status: 'Confirmed',
+      message: 'Confirmed attendance for June 24 morning session. Medical team notified.',
+      date: '2026-08-30',
+    },
+    {
+      id: 'inq-2',
+      playerId: 'demo-player',
+      scoutName: 'Noah Janssen',
+      club: 'AZ Alkmaar',
+      type: 'Match Footage Request',
+      status: 'Pending Review',
+      message: 'Reviewing full-match left-side footage vs Lyngby Reserve.',
+      date: '2026-08-31',
+    },
+  ],
+};
+
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);
