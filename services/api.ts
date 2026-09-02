@@ -10,8 +10,11 @@ import {
     PlayerMessage,
     PlayerPassport,
     ScoutActivityReport,
+    TelestrationType,
     TrialBooking,
     TrialStatus,
+    VideoAnnotationReport,
+    VideoTelestration,
     WatchlistEntry,
     WatchlistReport,
     WatchlistTier,
@@ -629,5 +632,36 @@ export function updateWatchlistEntry(
   return request<WatchlistEntry>(`/watchlist/${playerId}/${entryId}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
+  });
+}
+
+export function getVideoAnnotations(playerId: string, clipId?: string) {
+  const query = clipId ? `?clipId=${encodeURIComponent(clipId)}` : '';
+  return request<VideoAnnotationReport>(`/annotations/${playerId}${query}`);
+}
+
+export function addVideoTelestration(
+  playerId: string,
+  payload: {
+    clipId: string;
+    title: string;
+    timestampSeconds?: number;
+    timestampFormatted?: string;
+    type?: TelestrationType;
+    drawingData?: Record<string, unknown>;
+    tacticalCategory?: string;
+    coachingNote?: string;
+    verifiedByScout?: string;
+  }
+) {
+  return request<VideoTelestration>(`/annotations/${playerId}`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteVideoAnnotation(playerId: string, annotationId: string) {
+  return request<void>(`/annotations/${playerId}/${annotationId}`, {
+    method: 'DELETE',
   });
 }

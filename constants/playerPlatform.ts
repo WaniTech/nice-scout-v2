@@ -814,6 +814,107 @@ export const defaultWatchlistReport: WatchlistReport = {
   ],
 };
 
+export type TelestrationType = 'Telestration' | 'FreezeFrame' | 'Spotlight' | 'ZoneHighlight';
+
+export type VideoTelestration = {
+  id: string;
+  clipId: string;
+  playerId: string;
+  title: string;
+  timestampSeconds: number;
+  timestampFormatted: string;
+  type: TelestrationType;
+  drawingData?: {
+    tool?: string;
+    color?: string;
+    coordinates?: Array<{ x: number; y: number; radius?: number }>;
+    label?: string;
+  };
+  tacticalCategory: string;
+  coachingNote: string;
+  verifiedByScout?: string;
+  shareableUrl: string;
+  createdAt: string;
+};
+
+export type TelestrationSummary = {
+  totalAnnotations: number;
+  verifiedCount: number;
+  categoryCount: number;
+  categories: string[];
+  scoutReadinessIndex: number;
+};
+
+export type VideoAnnotationReport = {
+  playerId: string;
+  summary: TelestrationSummary;
+  taxonomy: string[];
+  annotations: VideoTelestration[];
+};
+
+export const defaultTelestrationReport: VideoAnnotationReport = {
+  playerId: 'demo-player',
+  summary: {
+    totalAnnotations: 2,
+    verifiedCount: 2,
+    categoryCount: 2,
+    categories: ['Attacking Transition', 'Defensive Pressing'],
+    scoutReadinessIndex: 95,
+  },
+  taxonomy: [
+    '1v1 Isolation',
+    'Attacking Transition',
+    'Defensive Pressing',
+    'Cutback Delivery',
+    'Overlapping Run',
+    'Underpressure Reception',
+    'Weak-Side Run',
+    'Recovery Sprint',
+  ],
+  annotations: [
+    {
+      id: 'tel-1',
+      clipId: 'clip-1',
+      playerId: 'demo-player',
+      title: '1v1 Acceleration & Near-Post Cutback',
+      timestampSeconds: 14.5,
+      timestampFormatted: '00:14.50',
+      type: 'Telestration',
+      drawingData: {
+        tool: 'arrow',
+        color: '#10B981',
+        coordinates: [{ x: 34, y: 62 }, { x: 72, y: 45 }],
+        label: 'Explosive Burst Space',
+      },
+      tacticalCategory: 'Attacking Transition',
+      coachingNote: 'Excellent initial separation from fullback. Delivery targeted second 6-yard box space.',
+      verifiedByScout: 'Mikkel Soren (FC Midtjylland)',
+      shareableUrl: 'https://nicescout.app/clips/clip-1/annotate?t=14.5',
+      createdAt: '2026-08-30T10:00:00.000Z',
+    },
+    {
+      id: 'tel-2',
+      clipId: 'clip-2',
+      playerId: 'demo-player',
+      title: 'Counter-Press Turnover Trigger',
+      timestampSeconds: 42.0,
+      timestampFormatted: '00:42.00',
+      type: 'FreezeFrame',
+      drawingData: {
+        tool: 'zone_circle',
+        color: '#F59E0B',
+        coordinates: [{ x: 55, y: 38, radius: 18 }],
+        label: 'Cover Shadow / Passing Lane Interception',
+      },
+      tacticalCategory: 'Defensive Pressing',
+      coachingNote: 'High tactical awareness to curve run and block central midfielder outlet passing lane.',
+      verifiedByScout: 'Noah Janssen (AZ Alkmaar)',
+      shareableUrl: 'https://nicescout.app/clips/clip-2/annotate?t=42.0',
+      createdAt: '2026-08-31T14:30:00.000Z',
+    },
+  ],
+};
+
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);

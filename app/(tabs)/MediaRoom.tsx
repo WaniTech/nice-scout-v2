@@ -1,9 +1,19 @@
-import { colors, mediaClips, PlayerClip, PlayerClipStatus } from '@/constants/playerPlatform';
+import {
+    colors,
+    defaultTelestrationReport,
+    mediaClips,
+    PlayerClip,
+    PlayerClipStatus,
+    VideoAnnotationReport,
+} from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
 import {
+    addVideoTelestration,
     createPlayerClip,
     deletePlayerClip,
+    deleteVideoAnnotation,
     getPlayerClips,
+    getVideoAnnotations,
     PlayerClipPayload,
     updatePlayerClip,
 } from '@/services/api';
@@ -43,6 +53,13 @@ const emptyForm: PlayerClipPayload = {
 export default function MediaRoomPage() {
   const { currentUser } = useAuth();
   const [clips, setClips] = useState<PlayerClip[]>(mediaClips);
+  const [annotationReport, setAnnotationReport] = useState<VideoAnnotationReport>(defaultTelestrationReport);
+  const [selectedClipForTelestration, setSelectedClipForTelestration] = useState<string>('clip-1');
+  const [showAnnotationModal, setShowAnnotationModal] = useState(false);
+  const [newAnnotationTitle, setNewAnnotationTitle] = useState('');
+  const [newAnnotationTimestamp, setNewAnnotationTimestamp] = useState('15.0');
+  const [newAnnotationCategory, setNewAnnotationCategory] = useState('Attacking Transition');
+  const [newAnnotationNote, setNewAnnotationNote] = useState('');
   const [form, setForm] = useState<PlayerClipPayload>(emptyForm);
   const [editingClipId, setEditingClipId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('1v1, pressing');
@@ -76,13 +93,17 @@ export default function MediaRoomPage() {
   useEffect(() => {
     let ignore = false;
 
-    async function loadClips() {
+    async function loadData() {
       try {
-        const remoteClips = await getPlayerClips(playerId);
+        const [remoteClips, remoteAnnotations] = await Promise.all([
+          getPlayerClips(playerId),
+          getVideoAnnotations(playerId),
+        ]);
 
         if (!ignore) {
           setClips(remoteClips);
-          setSyncNotice('Media room synced with API');
+          if (remoteAnnotations) setAnnotationReport(remoteAnnotations);
+          setSyncNotice('Media room & telestrations synced with API');
         }
       } catch {
         if (!ignore) {
@@ -91,7 +112,7 @@ export default function MediaRoomPage() {
       }
     }
 
-    loadClips();
+    loadData();
 
     return () => {
       ignore = true;
@@ -210,6 +231,55 @@ export default function MediaRoomPage() {
     }
   };
 
+  const handleAddAnnotation = async () => {
+    if (!newAnnotationTitle) return;
+
+    try {
+      const added = await addVideoTelestration(playerId, {
+        clipId: selectedClipForTelestration,
+        title: newAnnotationTitle,
+        timestampSeconds: parseFloat(newAnnotationTimestamp) || 15.0,
+        tacticalCategory: newAnnotationCategory,
+        coachingNote: newAnnotationNote,
+        verifiedByScout: 'Mikkel Soren (FC Midtjylland)',
+      });
+
+      setAnnotationReport((prev) => ({
+        ...prev,
+        annotations: [added, ...prev.annotations],
+        summary: {
+          ...prev.summary,
+          totalAnnotations: prev.summary.totalAnnotations + 1,
+          verifiedCount: prev.summary.verifiedCount + 1,
+        },
+      }));
+
+      setNewAnnotationTitle('');
+      setNewAnnotationNote('');
+      setShowAnnotationModal(false);
+      setSyncNotice('Tactical telestration saved to clip!');
+    } catch {
+      setShowAnnotationModal(false);
+    }
+  };
+
+  const handleDeleteAnnotation = async (annotationId: string) => {
+    try {
+      await deleteVideoAnnotation(playerId, annotationId);
+      setAnnotationReport((prev) => ({
+        ...prev,
+        annotations: prev.annotations.filter((a) => a.id !== annotationId),
+        summary: {
+          ...prev.summary,
+          totalAnnotations: Math.max(0, prev.summary.totalAnnotations - 1),
+        },
+      }));
+      setSyncNotice('Telestration annotation removed.');
+    } catch {
+      setSyncNotice('Could not remove annotation.');
+    }
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
@@ -245,6 +315,94 @@ export default function MediaRoomPage() {
         <View style={styles.summaryCard}>
           <Text style={styles.summaryValue}>{stats.totalViews}</Text>
           <Text style={styles.summaryLabel}>Scout Views</Text>
+        </View>
+      </View>
+
+      {/* Video Telestration & Tactical Markup Suite Card */}
+      <View style={styles.telestrationCard}>
+        <View style={styles.telestrationHeader}>
+          <View style={styles.telestrationIcon}>
+            <Ionicons name="color-wand" size={20} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.sectionKicker}>Video Markup & Telestration</Text>
+            <Text style={styles.telestrationTitle}>Tactical Annotations</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.addTelestrationBtn}
+            onPress={() => setShowAnnotationModal(!showAnnotationModal)}
+          >
+            <Ionicons name={showAnnotationModal ? 'close' : 'add'} size={18} color={colors.primary} />
+            <Text style={styles.addTelestrationBtnText}>{showAnnotationModal ? 'Cancel' : 'Annotate'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {showAnnotationModal ? (
+          <View style={styles.annotationForm}>
+            <Text style={styles.formSectionTitle}>Add Tactical Telestration Markup</Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder="Markup Title (e.g. 1v1 Burst & Delivery)"
+              placeholderTextColor="#94A3B8"
+              value={newAnnotationTitle}
+              onChangeText={setNewAnnotationTitle}
+            />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TextInput
+                style={[styles.formInput, { flex: 1 }]}
+                placeholder="Timestamp (seconds, e.g. 18.5)"
+                placeholderTextColor="#94A3B8"
+                value={newAnnotationTimestamp}
+                onChangeText={setNewAnnotationTimestamp}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={[styles.formInput, { flex: 1 }]}
+                placeholder="Tactical Category"
+                placeholderTextColor="#94A3B8"
+                value={newAnnotationCategory}
+                onChangeText={setNewAnnotationCategory}
+              />
+            </View>
+            <TextInput
+              style={[styles.formInput, { height: 60 }]}
+              placeholder="Coaching note / tactical breakdown..."
+              placeholderTextColor="#94A3B8"
+              value={newAnnotationNote}
+              onChangeText={setNewAnnotationNote}
+              multiline
+            />
+            <TouchableOpacity style={styles.submitAnnotationBtn} onPress={handleAddAnnotation}>
+              <Text style={styles.submitAnnotationText}>Save Telestration</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        <View style={styles.annotationList}>
+          {annotationReport.annotations.map((a) => (
+            <View key={a.id} style={styles.annotationItem}>
+              <View style={styles.annotationTop}>
+                <View style={styles.timeTag}>
+                  <Ionicons name="time" size={12} color={colors.primary} />
+                  <Text style={styles.timeTagText}>{a.timestampFormatted}</Text>
+                </View>
+                <Text style={styles.annotationName}>{a.title}</Text>
+                <TouchableOpacity
+                  style={styles.deleteAnnotationBtn}
+                  onPress={() => handleDeleteAnnotation(a.id)}
+                >
+                  <Ionicons name="trash-outline" size={14} color={colors.red} />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.annotationNote}>{a.coachingNote}</Text>
+              {a.verifiedByScout ? (
+                <View style={styles.verifiedScoutRow}>
+                  <Ionicons name="checkmark-circle" size={14} color="#15803D" />
+                  <Text style={styles.verifiedScoutText}>Verified: {a.verifiedByScout}</Text>
+                </View>
+              ) : null}
+            </View>
+          ))}
         </View>
       </View>
 
@@ -537,6 +695,151 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     marginTop: 3,
+  },
+  telestrationCard: {
+    marginTop: 16,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: 18,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  telestrationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  telestrationIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionKicker: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  telestrationTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  addTelestrationBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.surfaceAlt,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  addTelestrationBtnText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  annotationForm: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+    gap: 8,
+  },
+  formSectionTitle: {
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  formInput: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.line,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: colors.ink,
+  },
+  submitAnnotationBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  submitAnnotationText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  annotationList: {
+    gap: 10,
+  },
+  annotationItem: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    padding: 12,
+    gap: 4,
+  },
+  annotationTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  timeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  timeTagText: {
+    color: '#0D5C3A',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  annotationName: {
+    flex: 1,
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  deleteAnnotationBtn: {
+    padding: 4,
+  },
+  annotationNote: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  verifiedScoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  verifiedScoutText: {
+    color: '#15803D',
+    fontSize: 11,
+    fontWeight: '700',
   },
   searchShell: {
     minHeight: 50,
