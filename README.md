@@ -37,6 +37,7 @@ Right now you can use the app to:
 - **Contract Offer Terms & Deal Negotiation Room Engine**: Dedicated contract negotiation deal room in `app/JobDetail.tsx` with monthly base wage breakdowns, signing and performance bonus projections, negotiation audit trail, structured counter-proposal submission, and digital contract execution.
 - **Scout Watchlist & Talent Shortlist Network Engine**: Scout watchlist intelligence in `app/(tabs)/PlayerDashboard.tsx` with tier classifications (Priority Target, Monitored, Extended List), recruitment interest score index, scout inquiries feed, and real-time shortlist updates.
 - **Video Annotation & Tactical Telestration Clip Engine**: Interactive tactical video markup studio in `app/(tabs)/MediaRoom.tsx` featuring timestamped telestration arrows, freeze-frame coaching tags, tactical category taxonomy, and verified scout analysis exports.
+- **Athletic GPS Load & Injury Risk Diagnostics Engine**: High-speed running and physiological readiness tracking in `app/Profile/ReadyToWork.tsx` with ACWR injury risk indicators, peak sprint speed tracking, and trial fitness diagnostics.
 
 ## Work Hours
 

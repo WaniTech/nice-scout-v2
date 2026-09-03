@@ -1,6 +1,8 @@
 import {
     BenchmarkReport,
     ContractDeal,
+    GpsReport,
+    GpsSession,
     Opportunity,
     OpportunityStage,
     PassportMetrics,
@@ -663,5 +665,19 @@ export function addVideoTelestration(
 export function deleteVideoAnnotation(playerId: string, annotationId: string) {
   return request<void>(`/annotations/${playerId}/${annotationId}`, {
     method: 'DELETE',
+  });
+}
+
+export function getPlayerGpsReport(playerId: string) {
+  return request<GpsReport>(`/gps/${playerId}`);
+}
+
+export function logGpsSession(
+  playerId: string,
+  payload: Partial<GpsSession>
+) {
+  return request<GpsSession>(`/gps/${playerId}`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
   });
 }

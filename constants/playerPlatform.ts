@@ -915,6 +915,118 @@ export const defaultTelestrationReport: VideoAnnotationReport = {
   ],
 };
 
+export type GpsSession = {
+  id: string;
+  playerId: string;
+  date: string;
+  sessionType: string;
+  durationMinutes: number;
+  totalDistanceKm: number;
+  highSpeedRunningMeters: number;
+  sprintDistanceMeters: number;
+  topSpeedKmh: number;
+  accelerationsCount: number;
+  decelerationsCount: number;
+  heartRateAvgBpm: number;
+  heartRateMaxBpm: number;
+  playerLoadScore: number;
+  rpeScore: number;
+  readinessStatus: string;
+  notes: string;
+};
+
+export type WorkloadDiagnostics = {
+  acuteWorkload: number;
+  chronicWorkload: number;
+  acwr: number;
+  injuryRiskZone: string;
+  topSpeedPeak: number;
+  averageTopSpeed: number;
+  totalDistanceKm: number;
+  readinessScore: number;
+  recommendation: string;
+};
+
+export type GpsReport = {
+  playerId: string;
+  diagnostics: WorkloadDiagnostics;
+  sessions: GpsSession[];
+};
+
+export const defaultGpsReport: GpsReport = {
+  playerId: 'demo-player',
+  diagnostics: {
+    acuteWorkload: 485,
+    chronicWorkload: 520,
+    acwr: 0.93,
+    injuryRiskZone: 'Optimal (Sweet Spot)',
+    topSpeedPeak: 34.6,
+    averageTopSpeed: 32.3,
+    totalDistanceKm: 23.05,
+    readinessScore: 95,
+    recommendation: 'Player is in peak physiological condition for competitive match trials.',
+  },
+  sessions: [
+    {
+      id: 'gps-1',
+      playerId: 'demo-player',
+      date: '2026-09-01',
+      sessionType: 'Match Simulation',
+      durationMinutes: 90,
+      totalDistanceKm: 10.85,
+      highSpeedRunningMeters: 920,
+      sprintDistanceMeters: 380,
+      topSpeedKmh: 34.6,
+      accelerationsCount: 48,
+      decelerationsCount: 42,
+      heartRateAvgBpm: 168,
+      heartRateMaxBpm: 194,
+      playerLoadScore: 685,
+      rpeScore: 8,
+      readinessStatus: 'Optimal Fit',
+      notes: 'High volume sprint block. Strong recovery time between transition intervals.',
+    },
+    {
+      id: 'gps-2',
+      playerId: 'demo-player',
+      date: '2026-08-30',
+      sessionType: 'Tactical Speed & Pressing',
+      durationMinutes: 75,
+      totalDistanceKm: 7.40,
+      highSpeedRunningMeters: 650,
+      sprintDistanceMeters: 240,
+      topSpeedKmh: 33.8,
+      accelerationsCount: 36,
+      decelerationsCount: 31,
+      heartRateAvgBpm: 156,
+      heartRateMaxBpm: 186,
+      playerLoadScore: 490,
+      rpeScore: 7,
+      readinessStatus: 'Optimal Fit',
+      notes: 'Repeated 15m pressing bursts against backline transition.',
+    },
+    {
+      id: 'gps-3',
+      playerId: 'demo-player',
+      date: '2026-08-28',
+      sessionType: 'Recovery & Aerobic Capacity',
+      durationMinutes: 45,
+      totalDistanceKm: 4.80,
+      highSpeedRunningMeters: 180,
+      sprintDistanceMeters: 60,
+      topSpeedKmh: 28.4,
+      accelerationsCount: 14,
+      decelerationsCount: 12,
+      heartRateAvgBpm: 138,
+      heartRateMaxBpm: 158,
+      playerLoadScore: 280,
+      rpeScore: 4,
+      readinessStatus: 'Fully Recovered',
+      notes: 'Active recovery flush run, mobility, and foam rolling.',
+    },
+  ],
+};
+
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);

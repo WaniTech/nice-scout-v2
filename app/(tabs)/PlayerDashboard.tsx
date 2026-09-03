@@ -548,11 +548,12 @@ const styles = StyleSheet.create({
     paddingBottom: 110,
   },
   hero: {
-    minHeight: 440,
+    minHeight: 280,
     paddingHorizontal: 20,
-    paddingTop: 56,
+    paddingTop: 54,
     paddingBottom: 22,
     justifyContent: 'space-between',
+    backgroundColor: colors.primaryDark,
     overflow: 'hidden',
   },
   heroImage: {

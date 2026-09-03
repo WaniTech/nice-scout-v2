@@ -4,16 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ImageBackground,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const heroImage = require('../assets/images/player-hero.png');
@@ -58,12 +58,15 @@ export default function LoginScreen() {
               <Ionicons name="football" size={19} color={colors.accent} />
             </View>
             <Text style={styles.brandText}>Scout Link Player</Text>
+            <View style={styles.v2Badge}>
+              <Text style={styles.v2BadgeText}>v2.0 PRO</Text>
+            </View>
           </View>
           <View style={styles.heroCopy}>
-            <Text style={styles.eyebrow}>Verified player pathway</Text>
-            <Text style={styles.title}>Turn your profile into real club conversations.</Text>
+            <Text style={styles.eyebrow}>⚡ VERSION 2.0 • PRO TRIAL & RECRUITMENT PATHWAY</Text>
+            <Text style={styles.title}>Direct Pathway to Pro Trials & Contracts.</Text>
             <Text style={styles.subtitle}>
-              Build a player CV, match with trials, and keep scout messages in one place.
+              4-Pillar Radar Analytics, GPS Load Diagnostics, Live Scout Negotiation & Verified Career Passport.
             </Text>
           </View>
         </ImageBackground>
@@ -164,11 +167,12 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   hero: {
-    minHeight: 360,
+    minHeight: 280,
     paddingHorizontal: 22,
-    paddingTop: 62,
-    paddingBottom: 24,
+    paddingTop: 54,
+    paddingBottom: 22,
     justifyContent: 'space-between',
+    backgroundColor: colors.primaryDark,
     overflow: 'hidden',
   },
   heroImage: {
@@ -198,28 +202,44 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
   },
+  v2Badge: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginLeft: 'auto',
+  },
+  v2BadgeText: {
+    color: '#064E3B',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
   heroCopy: {
     maxWidth: 440,
   },
   eyebrow: {
-    color: '#E8C77C',
-    fontSize: 12,
+    color: '#FBBF24',
+    fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
-    marginBottom: 10,
+    letterSpacing: 1,
+    marginBottom: 8,
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 38,
-    lineHeight: 42,
+    fontSize: 34,
+    lineHeight: 40,
     fontWeight: '900',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#E2E8DD',
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 12,
-    maxWidth: 360,
+    color: '#E2E8F0',
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 10,
+    maxWidth: 380,
+    fontWeight: '500',
   },
   panel: {
     marginHorizontal: 16,
