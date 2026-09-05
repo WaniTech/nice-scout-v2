@@ -54,6 +54,7 @@ function RootNavigator({ colorScheme }: { colorScheme: ReturnType<typeof useColo
           <Stack.Screen name="JobDetail" />
           <Stack.Screen name="MessageDetail" />
           <Stack.Screen name="PlayerMatch" />
+          <Stack.Screen name="Watchlist" />
           <Stack.Screen name="Profile/HiddenCriteria" />
           <Stack.Screen name="Profile/JobPreferences" />
           <Stack.Screen name="Profile/Qualifications" />

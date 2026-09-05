@@ -396,6 +396,10 @@ export default function PlayerDashboard() {
             </View>
           ))}
         </View>
+        <TouchableOpacity style={styles.inlineButton} onPress={() => router.push('/Watchlist' as never)}>
+          <Text style={styles.inlineButtonText}>Manage watchlist</Text>
+          <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.readinessPanel}>

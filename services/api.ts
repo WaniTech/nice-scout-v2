@@ -637,6 +637,21 @@ export function updateWatchlistEntry(
   });
 }
 
+export function submitScoutInquiry(
+  playerId: string,
+  payload: {
+    scoutName: string;
+    club: string;
+    type: string;
+    message?: string;
+  }
+) {
+  return request<WatchlistReport['inquiries'][number]>(`/watchlist/${playerId}/inquiries`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export function getVideoAnnotations(playerId: string, clipId?: string) {
   const query = clipId ? `?clipId=${encodeURIComponent(clipId)}` : '';
   return request<VideoAnnotationReport>(`/annotations/${playerId}${query}`);
