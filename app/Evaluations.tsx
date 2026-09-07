@@ -1,25 +1,25 @@
 import {
-  colors,
-  defaultFeedbackReport,
-  ScoutEvaluation,
+    colors,
+    defaultFeedbackReport,
+    ScoutEvaluation,
 } from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  acknowledgeScoutFeedback,
-  getPlayerFeedbackReport,
-  submitScoutEvaluation,
+    acknowledgeScoutFeedback,
+    getPlayerFeedbackReport,
+    submitScoutEvaluation,
 } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 export default function EvaluationsScreen() {
