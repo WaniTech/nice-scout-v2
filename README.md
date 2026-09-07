@@ -39,6 +39,7 @@ Right now you can use the app to:
 - **Scout Watchlist Workspace**: Dedicated `app/Watchlist.tsx` for filtering scout tiers, editing private notes, updating shortlist priority, and sending formal follow-up inquiries.
 - **Video Annotation & Tactical Telestration Clip Engine**: Interactive tactical video markup studio in `app/(tabs)/MediaRoom.tsx` featuring timestamped telestration arrows, freeze-frame coaching tags, tactical category taxonomy, and verified scout analysis exports.
 - **Athletic GPS Load & Injury Risk Diagnostics Engine**: High-speed running and physiological readiness tracking in `app/Profile/ReadyToWork.tsx` with ACWR injury risk indicators, peak sprint speed tracking, and trial fitness diagnostics.
+- **Scout Match Evaluation & Tactical Feedback Engine**: Verified scout match performance auditing in `app/Evaluations.tsx` with 4-pillar assessment scorebars (Game Intelligence, Technical Execution, Physical Impact, Tactical Discipline), trial recommendation tracking, and player acknowledgement flows.
 
 ## Work Hours
 

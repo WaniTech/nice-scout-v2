@@ -387,6 +387,12 @@ export default function ProfilePage() {
           onPress={() => router.push('/Profile/ReadyToWork')}
         />
         <ProfileTool
+          icon="clipboard-outline"
+          title="Scout Match Evaluations"
+          description="Verified ratings, assessment pillars, and scout trial recommendations."
+          onPress={() => router.push('/Evaluations' as never)}
+        />
+        <ProfileTool
           icon="videocam-outline"
           title="Media room"
           description={`${readyClips} clips ready for club conversations and scout follow-ups.`}

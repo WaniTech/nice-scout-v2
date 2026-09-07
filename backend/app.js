@@ -9,6 +9,7 @@ const { createDealsRouter } = require('./routes/deals');
 const { createWatchlistRouter } = require('./routes/watchlist');
 const { createAnnotationRouter } = require('./routes/annotations');
 const { createGpsRouter } = require('./routes/gps');
+const { createFeedbackRouter } = require('./routes/feedback');
 
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -61,6 +62,7 @@ function createApp({ store, socketService } = {}) {
         'scout-watchlist',
         'video-telestration',
         'gps-diagnostics',
+        'scout-feedback',
         'socket-broadcast',
       ],
       timestamp: new Date().toISOString(),
@@ -116,6 +118,7 @@ function createApp({ store, socketService } = {}) {
   app.use('/api/watchlist', createWatchlistRouter(store, socketService));
   app.use('/api/annotations', createAnnotationRouter(store, socketService));
   app.use('/api/gps', createGpsRouter(store, socketService));
+  app.use('/api/feedback', createFeedbackRouter(store, socketService));
 
   return app;
 }
