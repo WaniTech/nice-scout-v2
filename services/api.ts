@@ -1,6 +1,7 @@
 import {
     BenchmarkReport,
     ContractDeal,
+    FeedbackReport,
     GpsReport,
     GpsSession,
     Opportunity,
@@ -12,6 +13,7 @@ import {
     PlayerMessage,
     PlayerPassport,
     ScoutActivityReport,
+    ScoutEvaluation,
     TelestrationType,
     TrialBooking,
     TrialStatus,
@@ -693,6 +695,31 @@ export function logGpsSession(
 ) {
   return request<GpsSession>(`/gps/${playerId}`, {
     method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getPlayerFeedbackReport(playerId: string) {
+  return request<FeedbackReport>(`/feedback/${playerId}`);
+}
+
+export function submitScoutEvaluation(
+  playerId: string,
+  payload: Partial<ScoutEvaluation>
+) {
+  return request<ScoutEvaluation>(`/feedback/${playerId}`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function acknowledgeScoutFeedback(
+  playerId: string,
+  evaluationId: string,
+  payload: { acknowledged?: boolean; coachingNotes?: string } = { acknowledged: true }
+) {
+  return request<ScoutEvaluation>(`/feedback/${playerId}/${evaluationId}`, {
+    method: 'PATCH',
     body: JSON.stringify(payload),
   });
 }

@@ -1027,6 +1027,118 @@ export const defaultGpsReport: GpsReport = {
   ],
 };
 
+export type ScoutEvaluation = {
+  id: string;
+  playerId: string;
+  scoutId: string;
+  scoutName: string;
+  club: string;
+  league: string;
+  matchOpponent: string;
+  matchDate: string;
+  overallRating: number;
+  categories: {
+    gameIntelligence: number;
+    technicalExecution: number;
+    physicalImpact: number;
+    tacticalDiscipline: number;
+  };
+  recommendation: string;
+  strengthsObserved: string[];
+  coachingNotes: string;
+  acknowledged: boolean;
+  createdAt: string;
+};
+
+export type FeedbackMetrics = {
+  totalEvaluations: number;
+  averageRating: number;
+  recommendationCount: number;
+  categoryAverages: {
+    gameIntelligence: number;
+    technicalExecution: number;
+    physicalImpact: number;
+    tacticalDiscipline: number;
+  };
+  topObservedStrengths: string[];
+};
+
+export type FeedbackReport = {
+  playerId: string;
+  metrics: FeedbackMetrics;
+  evaluations: ScoutEvaluation[];
+};
+
+export const defaultFeedbackReport: FeedbackReport = {
+  playerId: 'demo-player',
+  metrics: {
+    totalEvaluations: 2,
+    averageRating: 8.6,
+    recommendationCount: 2,
+    categoryAverages: {
+      gameIntelligence: 8.8,
+      technicalExecution: 8.6,
+      physicalImpact: 8.3,
+      tacticalDiscipline: 8.8,
+    },
+    topObservedStrengths: [
+      '1v1 Wide Acceleration',
+      'High-Press Triggers',
+      'Weak-Side Recovery',
+      'Inside-Forward Movement',
+      'First-Touch Under Pressure',
+    ],
+  },
+  evaluations: [
+    {
+      id: 'eval-1',
+      playerId: 'demo-player',
+      scoutId: 'scout-101',
+      scoutName: 'Mikkel Soren',
+      club: 'FC Midtjylland',
+      league: 'Danish Superliga Academy',
+      matchOpponent: 'AGF Aarhus U19',
+      matchDate: '2026-08-15',
+      overallRating: 8.8,
+      categories: {
+        gameIntelligence: 9.0,
+        technicalExecution: 8.7,
+        physicalImpact: 8.5,
+        tacticalDiscipline: 9.0,
+      },
+      recommendation: 'Recommend Immediate Trial',
+      strengthsObserved: ['1v1 Wide Acceleration', 'High-Press Triggers', 'Weak-Side Recovery'],
+      coachingNotes:
+        'Exceptional direct threat down the right channel. Showed high tactical awareness during turnover transitions.',
+      acknowledged: true,
+      createdAt: '2026-08-16T10:00:00.000Z',
+    },
+    {
+      id: 'eval-2',
+      playerId: 'demo-player',
+      scoutId: 'scout-102',
+      scoutName: 'Noah Janssen',
+      club: 'AZ Alkmaar',
+      league: 'Eredivisie U23 Pathway',
+      matchOpponent: 'FC Nordsjaelland U19',
+      matchDate: '2026-08-22',
+      overallRating: 8.4,
+      categories: {
+        gameIntelligence: 8.6,
+        technicalExecution: 8.5,
+        physicalImpact: 8.0,
+        tacticalDiscipline: 8.5,
+      },
+      recommendation: 'Shortlist for Scouting Camp',
+      strengthsObserved: ['Inside-Forward Movement', 'First-Touch Under Pressure'],
+      coachingNotes:
+        'Strong combinations when cutting inside onto stronger foot. Can work on final cross timing against compact low blocks.',
+      acknowledged: false,
+      createdAt: '2026-08-23T14:30:00.000Z',
+    },
+  ],
+};
+
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);
