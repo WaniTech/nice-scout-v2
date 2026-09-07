@@ -727,6 +727,7 @@ export function acknowledgeScoutFeedback(
     body: JSON.stringify(payload),
   });
 }
+<<<<<<< HEAD
 
 export function getPlayerMedicalReport(playerId: string) {
   return request<MedicalReport>(`/medical/${playerId}`);
@@ -761,3 +762,5 @@ export function addRehabProtocol(
     body: JSON.stringify(payload),
   });
 }
+=======
+>>>>>>> b517d129605517c3053cec668f915c0bc6a330c5

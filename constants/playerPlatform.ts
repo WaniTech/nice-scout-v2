@@ -1139,6 +1139,7 @@ export const defaultFeedbackReport: FeedbackReport = {
   ],
 };
 
+<<<<<<< HEAD
 export type PlayerInjury = {
   id: string;
   playerId: string;
@@ -1258,6 +1259,8 @@ export const defaultMedicalReport: MedicalReport = {
   },
 };
 
+=======
+>>>>>>> b517d129605517c3053cec668f915c0bc6a330c5
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);
