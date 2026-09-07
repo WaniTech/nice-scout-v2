@@ -1139,6 +1139,125 @@ export const defaultFeedbackReport: FeedbackReport = {
   ],
 };
 
+export type PlayerInjury = {
+  id: string;
+  playerId: string;
+  type: string;
+  bodyPart: string;
+  dateOccurred: string;
+  returnToPlayDate?: string;
+  recoveryWeeks: number;
+  recurrenceRisk: string;
+  treatingPhysio?: string;
+  status: string;
+  notes?: string;
+};
+
+export type RehabProtocol = {
+  id: string;
+  title: string;
+  focus: string;
+  frequency: string;
+  completedRounds: number;
+  status: string;
+};
+
+export type MedicalReadiness = {
+  clearanceStatus: string;
+  readinessScore: number;
+  totalInjuries: number;
+  activeInjuriesCount: number;
+  cardiacVerified: boolean;
+  concussionBaselineVerified: boolean;
+  safetyTier: string;
+};
+
+export type PlayerMedicalRecord = {
+  playerId: string;
+  clearanceStatus: string;
+  cardiacScreeningDate: string;
+  cardiacScreeningStatus: string;
+  bloodPanelStatus: string;
+  concussionBaselineDate: string;
+  orthopedicSummary: string;
+  injuries: PlayerInjury[];
+  rehabProtocols: RehabProtocol[];
+};
+
+export type MedicalReport = {
+  playerId: string;
+  readiness: MedicalReadiness;
+  record: PlayerMedicalRecord;
+};
+
+export const defaultMedicalReport: MedicalReport = {
+  playerId: 'demo-player',
+  readiness: {
+    clearanceStatus: 'Full Match Clearance',
+    readinessScore: 100,
+    totalInjuries: 2,
+    activeInjuriesCount: 0,
+    cardiacVerified: true,
+    concussionBaselineVerified: true,
+    safetyTier: 'Elite Medical Grade',
+  },
+  record: {
+    playerId: 'demo-player',
+    clearanceStatus: 'Full Match Clearance',
+    cardiacScreeningDate: '2026-06-10',
+    cardiacScreeningStatus: 'Cleared (FIFA Level 1)',
+    bloodPanelStatus: 'Normal (Optimal Ferritin & Vitamin D)',
+    concussionBaselineDate: '2026-05-18',
+    orthopedicSummary: 'No structural knee or ankle instability. Symmetrical hamstring strength.',
+    injuries: [
+      {
+        id: 'inj-1',
+        playerId: 'demo-player',
+        type: 'Hamstring Strain (Grade 1)',
+        bodyPart: 'Left Bicep Femoris',
+        dateOccurred: '2025-11-12',
+        returnToPlayDate: '2025-12-05',
+        recoveryWeeks: 3,
+        recurrenceRisk: 'Low',
+        treatingPhysio: 'Dr. Emil Lind, Nordic Sports Clinic',
+        status: 'Fully Resolved',
+        notes: 'Completed eccentric Nordic curl progression. Strength test 100% symmetrical.',
+      },
+      {
+        id: 'inj-2',
+        playerId: 'demo-player',
+        type: 'Ankle Inversion Sprain (Grade 1)',
+        bodyPart: 'Right Lateral Ankle',
+        dateOccurred: '2025-04-02',
+        returnToPlayDate: '2025-04-18',
+        recoveryWeeks: 2,
+        recurrenceRisk: 'Low',
+        treatingPhysio: 'Dr. Emil Lind, Nordic Sports Clinic',
+        status: 'Fully Resolved',
+        notes: 'Full proprioception and hop testing passed prior to squad return.',
+      },
+    ],
+    rehabProtocols: [
+      {
+        id: 'prot-1',
+        title: 'Hamstring Eccentric Durability',
+        focus: 'Injury Prevention & Sprint Deceleration',
+        frequency: '3x / week',
+        completedRounds: 18,
+        status: 'Active Maintenance',
+      },
+      {
+        id: 'prot-2',
+        title: 'Ankle Proprioception & Kinetic Chain',
+        focus: 'Multi-directional Stability & Cutting',
+        frequency: '2x / week',
+        completedRounds: 12,
+        status: 'Active Maintenance',
+      },
+    ],
+  },
+};
+
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);

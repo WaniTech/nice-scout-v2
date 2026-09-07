@@ -10,6 +10,7 @@ const { createWatchlistRouter } = require('./routes/watchlist');
 const { createAnnotationRouter } = require('./routes/annotations');
 const { createGpsRouter } = require('./routes/gps');
 const { createFeedbackRouter } = require('./routes/feedback');
+const { createMedicalRouter } = require('./routes/medical');
 
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -63,6 +64,7 @@ function createApp({ store, socketService } = {}) {
         'video-telestration',
         'gps-diagnostics',
         'scout-feedback',
+        'medical-passport',
         'socket-broadcast',
       ],
       timestamp: new Date().toISOString(),
@@ -119,6 +121,7 @@ function createApp({ store, socketService } = {}) {
   app.use('/api/annotations', createAnnotationRouter(store, socketService));
   app.use('/api/gps', createGpsRouter(store, socketService));
   app.use('/api/feedback', createFeedbackRouter(store, socketService));
+  app.use('/api/medical', createMedicalRouter(store, socketService));
 
   return app;
 }

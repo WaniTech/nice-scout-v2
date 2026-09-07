@@ -393,6 +393,12 @@ export default function ProfilePage() {
           onPress={() => router.push('/Evaluations' as never)}
         />
         <ProfileTool
+          icon="medkit-outline"
+          title="Medical & Physical Clearance"
+          description="Clinical screening status, injury history, and return-to-play protocols."
+          onPress={() => router.push('/MedicalPassport' as never)}
+        />
+        <ProfileTool
           icon="videocam-outline"
           title="Media room"
           description={`${readyClips} clips ready for club conversations and scout follow-ups.`}

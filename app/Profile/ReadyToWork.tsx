@@ -145,6 +145,15 @@ export default function ReadyForTrialsPage() {
               </View>
             ))}
           </View>
+
+          <TouchableOpacity
+            style={styles.medicalPassportLinkBtn}
+            onPress={() => router.push('/MedicalPassport' as never)}
+          >
+            <Ionicons name="medkit-outline" size={16} color={colors.primary} />
+            <Text style={styles.medicalPassportLinkText}>View Medical & Screening Clearance</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.card}>
@@ -395,6 +404,24 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 11,
     marginTop: 2,
+  },
+  medicalPassportLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 12,
+  },
+  medicalPassportLinkText: {
+    flex: 1,
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '800',
   },
   card: {
     borderRadius: 8,

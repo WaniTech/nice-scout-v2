@@ -4,14 +4,18 @@ import {
     FeedbackReport,
     GpsReport,
     GpsSession,
+    MedicalReport,
     Opportunity,
     OpportunityStage,
     PassportMetrics,
     PillarScores,
     PlayerClip,
     PlayerClipStatus,
+    PlayerInjury,
+    PlayerMedicalRecord,
     PlayerMessage,
     PlayerPassport,
+    RehabProtocol,
     ScoutActivityReport,
     ScoutEvaluation,
     TelestrationType,
@@ -720,6 +724,40 @@ export function acknowledgeScoutFeedback(
 ) {
   return request<ScoutEvaluation>(`/feedback/${playerId}/${evaluationId}`, {
     method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getPlayerMedicalReport(playerId: string) {
+  return request<MedicalReport>(`/medical/${playerId}`);
+}
+
+export function logPlayerInjury(
+  playerId: string,
+  payload: Partial<PlayerInjury>
+) {
+  return request<PlayerInjury>(`/medical/${playerId}/injuries`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateMedicalClearance(
+  playerId: string,
+  payload: Partial<PlayerMedicalRecord>
+) {
+  return request<PlayerMedicalRecord>(`/medical/${playerId}/clearance`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function addRehabProtocol(
+  playerId: string,
+  payload: Partial<RehabProtocol>
+) {
+  return request<RehabProtocol>(`/medical/${playerId}/protocols`, {
+    method: 'POST',
     body: JSON.stringify(payload),
   });
 }
