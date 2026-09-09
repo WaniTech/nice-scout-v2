@@ -10,10 +10,8 @@ const { createWatchlistRouter } = require('./routes/watchlist');
 const { createAnnotationRouter } = require('./routes/annotations');
 const { createGpsRouter } = require('./routes/gps');
 const { createFeedbackRouter } = require('./routes/feedback');
-<<<<<<< HEAD
 const { createMedicalRouter } = require('./routes/medical');
-=======
->>>>>>> b517d129605517c3053cec668f915c0bc6a330c5
+const { createShowcaseRouter } = require('./routes/showcases');
 
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -67,10 +65,8 @@ function createApp({ store, socketService } = {}) {
         'video-telestration',
         'gps-diagnostics',
         'scout-feedback',
-<<<<<<< HEAD
         'medical-passport',
-=======
->>>>>>> b517d129605517c3053cec668f915c0bc6a330c5
+        'showcase-combines',
         'socket-broadcast',
       ],
       timestamp: new Date().toISOString(),
@@ -127,10 +123,8 @@ function createApp({ store, socketService } = {}) {
   app.use('/api/annotations', createAnnotationRouter(store, socketService));
   app.use('/api/gps', createGpsRouter(store, socketService));
   app.use('/api/feedback', createFeedbackRouter(store, socketService));
-<<<<<<< HEAD
   app.use('/api/medical', createMedicalRouter(store, socketService));
-=======
->>>>>>> b517d129605517c3053cec668f915c0bc6a330c5
+  app.use('/api/showcases', createShowcaseRouter(store, socketService));
 
   return app;
 }

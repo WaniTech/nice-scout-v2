@@ -18,6 +18,9 @@ import {
     RehabProtocol,
     ScoutActivityReport,
     ScoutEvaluation,
+    ShowcaseEvent,
+    ShowcaseReport,
+    ShowcaseRsvpStatus,
     TelestrationType,
     TrialBooking,
     TrialStatus,
@@ -727,7 +730,6 @@ export function acknowledgeScoutFeedback(
     body: JSON.stringify(payload),
   });
 }
-<<<<<<< HEAD
 
 export function getPlayerMedicalReport(playerId: string) {
   return request<MedicalReport>(`/medical/${playerId}`);
@@ -762,5 +764,22 @@ export function addRehabProtocol(
     body: JSON.stringify(payload),
   });
 }
-=======
->>>>>>> b517d129605517c3053cec668f915c0bc6a330c5
+
+export function getPlayerShowcaseReport(playerId: string) {
+  return request<ShowcaseReport>(`/showcases/${playerId}`);
+}
+
+export function updateShowcaseRsvp(
+  playerId: string,
+  showcaseId: string,
+  payload: {
+    rsvpStatus: ShowcaseRsvpStatus;
+    assignedSquad?: string;
+    notes?: string;
+  }
+) {
+  return request<ShowcaseEvent>(`/showcases/${playerId}/${showcaseId}/rsvp`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

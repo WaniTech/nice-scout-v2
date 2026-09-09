@@ -475,6 +475,22 @@ export default function PlayerDashboard() {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.showcaseBanner}>
+        <View style={styles.showcaseBannerIcon}>
+          <Ionicons name="trophy-outline" size={20} color="#FFFFFF" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.showcaseBannerTitle}>Scouting Combines & Showcases</Text>
+          <Text style={styles.showcaseBannerText}>
+            18 scouts confirmed for upcoming Nordic U23 Combine.
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.showcaseBannerBtn} onPress={() => router.push('/Showcases' as never)}>
+          <Text style={styles.showcaseBannerBtnText}>View</Text>
+          <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.sectionHeader}>
         <View>
           <Text style={styles.sectionKicker}>Club matching</Text>
@@ -1327,6 +1343,49 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     fontSize: 11,
     fontWeight: '700',
+  },
+  showcaseBanner: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#0F2C20',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  showcaseBannerIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  showcaseBannerTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  showcaseBannerText: {
+    color: '#A7F3D0',
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  showcaseBannerBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  showcaseBannerBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
   },
   emptyState: {
     marginHorizontal: 16,
