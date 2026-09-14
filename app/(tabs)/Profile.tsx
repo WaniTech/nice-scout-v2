@@ -405,6 +405,12 @@ export default function ProfilePage() {
           onPress={() => router.push('/Showcases' as never)}
         />
         <ProfileTool
+          icon="trending-up-outline"
+          title="Transfer Market & Club Mandates"
+          description="Algorithmic market valuation, contract listing status, and direct scout dossier pitching."
+          onPress={() => router.push('/TransferMarket' as never)}
+        />
+        <ProfileTool
           icon="videocam-outline"
           title="Media room"
           description={`${readyClips} clips ready for club conversations and scout follow-ups.`}

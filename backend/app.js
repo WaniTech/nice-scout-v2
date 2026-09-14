@@ -12,6 +12,7 @@ const { createGpsRouter } = require('./routes/gps');
 const { createFeedbackRouter } = require('./routes/feedback');
 const { createMedicalRouter } = require('./routes/medical');
 const { createShowcaseRouter } = require('./routes/showcases');
+const { createTransferRouter } = require('./routes/transfers');
 
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -67,6 +68,7 @@ function createApp({ store, socketService } = {}) {
         'scout-feedback',
         'medical-passport',
         'showcase-combines',
+        'transfer-market',
         'socket-broadcast',
       ],
       timestamp: new Date().toISOString(),
@@ -125,6 +127,7 @@ function createApp({ store, socketService } = {}) {
   app.use('/api/feedback', createFeedbackRouter(store, socketService));
   app.use('/api/medical', createMedicalRouter(store, socketService));
   app.use('/api/showcases', createShowcaseRouter(store, socketService));
+  app.use('/api/transfers', createTransferRouter(store, socketService));
 
   return app;
 }

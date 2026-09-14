@@ -4,11 +4,13 @@ import {
     FeedbackReport,
     GpsReport,
     GpsSession,
+    MarketValuation,
     MedicalReport,
     Opportunity,
     OpportunityStage,
     PassportMetrics,
     PillarScores,
+    PitchSubmission,
     PlayerClip,
     PlayerClipStatus,
     PlayerInjury,
@@ -22,13 +24,15 @@ import {
     ShowcaseReport,
     ShowcaseRsvpStatus,
     TelestrationType,
+    TransferReport,
+    TransferStatus,
     TrialBooking,
     TrialStatus,
     VideoAnnotationReport,
     VideoTelestration,
     WatchlistEntry,
     WatchlistReport,
-    WatchlistTier,
+    WatchlistTier
 } from '@/constants/playerPlatform';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -781,5 +785,50 @@ export function updateShowcaseRsvp(
   return request<ShowcaseEvent>(`/showcases/${playerId}/${showcaseId}/rsvp`, {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+export function getPlayerTransferReport(playerId: string) {
+  return request<TransferReport>(`/transfers/${playerId}`);
+}
+
+export function submitClubMandatePitch(
+  playerId: string,
+  mandateId: string,
+  payload: {
+    message?: string;
+    attachedClipCount?: number;
+  }
+) {
+  return request<PitchSubmission>(`/transfers/${playerId}/pitch`, {
+    method: 'POST',
+    body: JSON.stringify({
+      mandateId,
+      ...payload,
+    }),
+  });
+}
+
+export function updatePlayerTransferStatus(
+  playerId: string,
+  payload: {
+    transferStatus?: TransferStatus;
+    contractExpiry?: string;
+    releaseClauseEur?: number | null;
+  }
+) {
+  return request<TransferReport>(`/transfers/${playerId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function recalculatePlayerValuation(
+  playerId: string,
+  factors?: Record<string, unknown>
+) {
+  return request<MarketValuation>(`/transfers/${playerId}/valuation/recalculate`, {
+    method: 'POST',
+    body: JSON.stringify(factors || {}),
   });
 }

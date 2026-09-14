@@ -491,6 +491,22 @@ export default function PlayerDashboard() {
         </TouchableOpacity>
       </View>
 
+      <View style={[styles.showcaseBanner, { backgroundColor: '#0F172A', borderColor: '#1E293B' }]}>
+        <View style={[styles.showcaseBannerIcon, { backgroundColor: '#2563EB' }]}>
+          <Ionicons name="trending-up" size={20} color="#FFFFFF" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.showcaseBannerTitle}>Transfer Market & Mandates</Text>
+          <Text style={styles.showcaseBannerText}>
+            €185k valuation • 4 active club searches matching your profile.
+          </Text>
+        </View>
+        <TouchableOpacity style={[styles.showcaseBannerBtn, { backgroundColor: '#2563EB' }]} onPress={() => router.push('/TransferMarket' as never)}>
+          <Text style={styles.showcaseBannerBtnText}>Pitch</Text>
+          <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.sectionHeader}>
         <View>
           <Text style={styles.sectionKicker}>Club matching</Text>

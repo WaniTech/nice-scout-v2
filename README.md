@@ -42,6 +42,7 @@ Right now you can use the app to:
 - **Scout Match Evaluation & Tactical Feedback Engine**: Verified scout match performance auditing in `app/Evaluations.tsx` with 4-pillar assessment scorebars (Game Intelligence, Technical Execution, Physical Impact, Tactical Discipline), trial recommendation tracking, and player acknowledgement flows.
 - **Medical & Physical Screening Passport Engine**: Complete sports medical passport in `app/MedicalPassport.tsx` with FIFA-level clinical screening verifications (Cardiac ECG, SCAT5 Concussion Baseline, Blood Biomarkers, Orthopedic Screen), injury history logs, return-to-play timelines, and active injury prevention protocols.
 - **Scouting Showcase & Combine Tournament Engine**: Multi-club scouting tournament and combine hub in `app/Showcases.tsx` featuring regional event schedules, confirmed scout attendance lists from European clubs, squad allocations, match day timelines, and real-time RSVP state management.
+- **Transfer Market Valuation & Club Mandates Engine**: Algorithmic player transfer valuation calculator and verified club recruitment mandates hub in `app/TransferMarket.tsx` featuring bracket ranges, growth timelines, listing status manager, and 1-click dossier pitching with WebSocket updates.
 
 ## Work Hours
 
