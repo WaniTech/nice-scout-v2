@@ -59,6 +59,7 @@ function RootNavigator({ colorScheme }: { colorScheme: ReturnType<typeof useColo
           <Stack.Screen name="MedicalPassport" />
           <Stack.Screen name="Showcases" />
           <Stack.Screen name="TransferMarket" />
+          <Stack.Screen name="ScoutDossier" />
           <Stack.Screen name="Profile/HiddenCriteria" />
           <Stack.Screen name="Profile/JobPreferences" />
           <Stack.Screen name="Profile/Qualifications" />

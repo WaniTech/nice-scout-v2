@@ -507,6 +507,22 @@ export default function PlayerDashboard() {
         </TouchableOpacity>
       </View>
 
+      <View style={[styles.showcaseBanner, { backgroundColor: '#1E1B4B', borderColor: '#312E81' }]}>
+        <View style={[styles.showcaseBannerIcon, { backgroundColor: '#4F46E5' }]}>
+          <Ionicons name="document-attach" size={20} color="#FFFFFF" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.showcaseBannerTitle}>Scout Intelligence Dossier</Text>
+          <Text style={styles.showcaseBannerText}>
+            Export verified technical, medical, and GPS packs for clubs.
+          </Text>
+        </View>
+        <TouchableOpacity style={[styles.showcaseBannerBtn, { backgroundColor: '#4F46E5' }]} onPress={() => router.push('/ScoutDossier' as never)}>
+          <Text style={styles.showcaseBannerBtnText}>Export</Text>
+          <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.sectionHeader}>
         <View>
           <Text style={styles.sectionKicker}>Club matching</Text>

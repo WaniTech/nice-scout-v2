@@ -1648,6 +1648,173 @@ export const defaultTransferReport: TransferReport = {
   ],
 };
 
+export type DossierExportFormat = 'PDF' | 'JSON';
+
+export type DossierExportRecord = {
+  id: string;
+  format: DossierExportFormat;
+  templateId?: string;
+  targetClub: string;
+  scoutRecipient: string;
+  exportedAt: string;
+  dossierVersion: string;
+  downloadUrl: string;
+  status: string;
+};
+
+export type DossierTemplate = {
+  id: string;
+  name: string;
+  description: string;
+  pageCount: number;
+  recommendedFor: string;
+};
+
+export type DossierReport = {
+  playerId: string;
+  dossierId: string;
+  title: string;
+  version: string;
+  generatedAt: string;
+  confidentiality: string;
+  status: string;
+  scoutSummary: {
+    executiveHeadline: string;
+    projectedCeiling: string;
+    readinessRating: number;
+    recommendedPathway: string;
+  };
+  sections: {
+    tacticalPillars: {
+      overall: number;
+      physical: number;
+      technical: number;
+      tactical: number;
+      mental: number;
+      strengths: string[];
+      developmentFocus: string[];
+    };
+    medicalClearance: {
+      status: string;
+      cardiacEcg: string;
+      concussionBaseline: string;
+      activeRestrictions: string;
+      riskIndex: string;
+    };
+    athleticGps: {
+      peakSprintSpeed: string;
+      highSpeedRunningPerMatch: string;
+      repeatSprintAbility: string;
+      acwrRatio: number;
+      fitnessTier: string;
+    };
+    transferAndValuation: {
+      estimatedValueEur: number;
+      valueRange: string;
+      contractStatus: string;
+      euPassport: boolean;
+      fifaTalentId: string;
+    };
+  };
+  exportsHistory: DossierExportRecord[];
+  exportTemplates: DossierTemplate[];
+};
+
+export const defaultDossierReport: DossierReport = {
+  playerId: 'demo-player',
+  dossierId: 'DOS-2026-ALX99',
+  title: 'Elite Prospect Intelligence Dossier',
+  version: '2026.3',
+  generatedAt: '2026-09-14T10:00:00.000Z',
+  confidentiality: 'Confidential • Scout Accredited Only',
+  status: 'Ready For Export',
+  scoutSummary: {
+    executiveHeadline: 'Dynamically explosive winger with verified top-decile sprint velocity and European work rights.',
+    projectedCeiling: 'Tier 1 / Top 5 European Development Squad Candidate',
+    readinessRating: 94,
+    recommendedPathway: 'Direct First-Team Bridge / Pre-Season Trial Invitee',
+  },
+  sections: {
+    tacticalPillars: {
+      overall: 89,
+      physical: 92,
+      technical: 87,
+      tactical: 85,
+      mental: 91,
+      strengths: ['1v1 Wide Isolation', 'Accelerative Burst', 'High-Press Transition', 'Crossing Delivery'],
+      developmentFocus: ['Weak Foot Finishing', 'Defensive Compactness In Deep Block'],
+    },
+    medicalClearance: {
+      status: 'Full Medical Clearance — Grade A',
+      cardiacEcg: 'Normal Sinus Rhythm (Verified FIFA Standard)',
+      concussionBaseline: 'SCAT5 Baseline Cleared (Score: 28/30)',
+      activeRestrictions: 'None',
+      riskIndex: 'Low (0.92 ACWR)',
+    },
+    athleticGps: {
+      peakSprintSpeed: '33.8 km/h',
+      highSpeedRunningPerMatch: '980m (>25 km/h)',
+      repeatSprintAbility: '14 sprints / 90 min',
+      acwrRatio: 1.08,
+      fitnessTier: 'Elite Professional Readiness',
+    },
+    transferAndValuation: {
+      estimatedValueEur: 185000,
+      valueRange: '€150,000 - €230,000',
+      contractStatus: 'Free Agent',
+      euPassport: true,
+      fifaTalentId: 'FIFA-DK-8921-X',
+    },
+  },
+  exportsHistory: [
+    {
+      id: 'exp-1',
+      format: 'PDF',
+      templateId: 'template-executive',
+      targetClub: 'AZ Alkmaar',
+      scoutRecipient: 'Lars van der Beek',
+      exportedAt: '2026-09-14T09:40:00.000Z',
+      dossierVersion: '2026.3',
+      downloadUrl: '/api/dossier/demo-player/export/exp-1.pdf',
+      status: 'Delivered',
+    },
+    {
+      id: 'exp-2',
+      format: 'JSON',
+      templateId: 'template-comprehensive',
+      targetClub: 'FC Midtjylland',
+      scoutRecipient: 'Soren Poulsen',
+      exportedAt: '2026-09-13T16:15:00.000Z',
+      dossierVersion: '2026.2',
+      downloadUrl: '/api/dossier/demo-player/export/exp-2.json',
+      status: 'Archived',
+    },
+  ],
+  exportTemplates: [
+    {
+      id: 'template-executive',
+      name: 'Executive Scout Summary (1-Pager)',
+      description: 'Streamlined briefing highlighting key metrics, valuation, and immediate contact details.',
+      pageCount: 1,
+      recommendedFor: 'Sporting Directors & Heads of Recruitment',
+    },
+    {
+      id: 'template-comprehensive',
+      name: 'Complete Technical & Medical Dossier',
+      description: 'Comprehensive 8-pillar report including GPS biometrics, ECG certifications, video timestamps, and tactical radar.',
+      pageCount: 6,
+      recommendedFor: 'Lead Scouts, Performance Coaches, & Medical Staff',
+    },
+    {
+      id: 'template-transfer',
+      name: 'Transfer & Mandate Pitch Deck',
+      description: 'Focused deck with valuation justification, contract terms flexibility, and tactical role alignment.',
+      pageCount: 3,
+      recommendedFor: 'Agents, Intermediaries, & Club Transfer Committees',
+    },
+  ],
+};
+
 export function findOpportunity(id?: string | string[]) {
   const normalizedId = Array.isArray(id) ? id[0] : id;
   return opportunities.find((opportunity) => opportunity.id === normalizedId);

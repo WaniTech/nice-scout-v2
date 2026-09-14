@@ -1,6 +1,9 @@
 import {
     BenchmarkReport,
     ContractDeal,
+    DossierExportFormat,
+    DossierExportRecord,
+    DossierReport,
     FeedbackReport,
     GpsReport,
     GpsSession,
@@ -830,5 +833,24 @@ export function recalculatePlayerValuation(
   return request<MarketValuation>(`/transfers/${playerId}/valuation/recalculate`, {
     method: 'POST',
     body: JSON.stringify(factors || {}),
+  });
+}
+
+export function getPlayerDossier(playerId: string) {
+  return request<DossierReport>(`/dossier/${playerId}`);
+}
+
+export function generatePlayerDossierExport(
+  playerId: string,
+  payload: {
+    format?: DossierExportFormat;
+    targetClub?: string;
+    scoutRecipient?: string;
+    templateId?: string;
+  }
+) {
+  return request<DossierExportRecord>(`/dossier/${playerId}/export`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
   });
 }
