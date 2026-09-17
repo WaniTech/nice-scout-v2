@@ -1,11 +1,11 @@
 import {
-    CareerMilestone,
-    colors,
-    defaultPassport,
-    defaultPlayerProfile,
-    mediaClips,
-    performanceStats,
-    PlayerPassport,
+  CareerMilestone,
+  colors,
+  defaultPassport,
+  defaultPlayerProfile,
+  mediaClips,
+  performanceStats,
+  PlayerPassport,
 } from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
 import { addCareerMilestone, getPlayerPassport } from '@/services/api';
@@ -14,13 +14,13 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function ProfilePage() {
@@ -403,12 +403,6 @@ export default function ProfilePage() {
           title="Scouting Combines & Showcases"
           description="Attend regional combines, 11v11 matches, and live scout assessment tournaments."
           onPress={() => router.push('/Showcases' as never)}
-        />
-        <ProfileTool
-          icon="trending-up-outline"
-          title="Transfer Market & Club Mandates"
-          description="Algorithmic market valuation, contract listing status, and direct scout dossier pitching."
-          onPress={() => router.push('/TransferMarket' as never)}
         />
         <ProfileTool
           icon="videocam-outline"

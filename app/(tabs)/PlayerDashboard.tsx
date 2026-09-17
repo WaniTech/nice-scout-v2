@@ -523,6 +523,22 @@ export default function PlayerDashboard() {
         </TouchableOpacity>
       </View>
 
+      <View style={[styles.showcaseBanner, { backgroundColor: '#311042', borderColor: '#581C87' }]}>
+        <View style={[styles.showcaseBannerIcon, { backgroundColor: '#7E22CE' }]}>
+          <Ionicons name="mic-outline" size={20} color="#FFFFFF" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.showcaseBannerTitle}>Scout Interview Hub</Text>
+          <Text style={styles.showcaseBannerText}>
+            Prepare tactical role explanations and practice director Q&amp;A.
+          </Text>
+        </View>
+        <TouchableOpacity style={[styles.showcaseBannerBtn, { backgroundColor: '#7E22CE' }]} onPress={() => router.push('/ScoutInterviewHub' as never)}>
+          <Text style={styles.showcaseBannerBtnText}>Prep</Text>
+          <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.sectionHeader}>
         <View>
           <Text style={styles.sectionKicker}>Club matching</Text>

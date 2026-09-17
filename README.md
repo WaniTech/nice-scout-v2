@@ -44,6 +44,7 @@ Right now you can use the app to:
 - **Scouting Showcase & Combine Tournament Engine**: Multi-club scouting tournament and combine hub in `app/Showcases.tsx` featuring regional event schedules, confirmed scout attendance lists from European clubs, squad allocations, match day timelines, and real-time RSVP state management.
 - **Transfer Market Valuation & Club Mandates Engine**: Algorithmic player transfer valuation calculator and verified club recruitment mandates hub in `app/TransferMarket.tsx` featuring bracket ranges, growth timelines, listing status manager, and 1-click dossier pitching with WebSocket updates.
 - **Scout Intelligence Dossier & Export Hub**: Complete scout briefing generation suite in `app/ScoutDossier.tsx` aggregating multi-pillar ratings, FIFA medical clearances, GPS sprint benchmarks, and market valuation with multi-template PDF and JSON export dispatching.
+- **Scout Interview Prep & Trial Simulation Hub**: Full-stack trial briefing preparation and simulation studio in `app/ScoutInterviewHub.tsx` with scheduled club briefing trackers, tactical role explanation modules, interactive question drills with custom talking points, and mock trial simulation scoring.
 
 ## Work Hours
 

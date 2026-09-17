@@ -7,6 +7,8 @@ import {
     FeedbackReport,
     GpsReport,
     GpsSession,
+    InterviewPrepReport,
+    InterviewQuestion,
     MarketValuation,
     MedicalReport,
     Opportunity,
@@ -853,4 +855,35 @@ export function generatePlayerDossierExport(
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export function getInterviewPrepReport(playerId: string) {
+  return request<InterviewPrepReport>(`/interview-prep/${playerId}`);
+}
+
+export function updateInterviewQuestionPractice(
+  playerId: string,
+  questionId: string,
+  payload: { notes?: string } = {}
+) {
+  return request<{ overallReadinessScore: number; question: InterviewQuestion }>(
+    `/interview-prep/${playerId}/questions/${questionId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+export function logInterviewSimulation(
+  playerId: string,
+  payload: { club?: string; score?: number; feedback?: string }
+) {
+  return request<{ id: string; club: string; date: string; score: number; feedback: string }>(
+    `/interview-prep/${playerId}/simulate`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
 }

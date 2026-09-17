@@ -14,6 +14,7 @@ const { createMedicalRouter } = require('./routes/medical');
 const { createShowcaseRouter } = require('./routes/showcases');
 const { createTransferRouter } = require('./routes/transfers');
 const { createDossierRouter } = require('./routes/dossier');
+const { createInterviewPrepRouter } = require('./routes/interviewPrep');
 
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -131,6 +132,7 @@ function createApp({ store, socketService } = {}) {
   app.use('/api/showcases', createShowcaseRouter(store, socketService));
   app.use('/api/transfers', createTransferRouter(store, socketService));
   app.use('/api/dossier', createDossierRouter(store, socketService));
+  app.use('/api/interview-prep', createInterviewPrepRouter(store, socketService));
 
   return app;
 }
