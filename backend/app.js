@@ -15,6 +15,7 @@ const { createShowcaseRouter } = require('./routes/showcases');
 const { createTransferRouter } = require('./routes/transfers');
 const { createDossierRouter } = require('./routes/dossier');
 const { createInterviewPrepRouter } = require('./routes/interviewPrep');
+const { createPathwayRouter } = require('./routes/pathway');
 
 function isPlainObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -72,6 +73,7 @@ function createApp({ store, socketService } = {}) {
         'showcase-combines',
         'transfer-market',
         'scout-dossier',
+        'career-pathway',
         'socket-broadcast',
       ],
       timestamp: new Date().toISOString(),
@@ -133,6 +135,7 @@ function createApp({ store, socketService } = {}) {
   app.use('/api/transfers', createTransferRouter(store, socketService));
   app.use('/api/dossier', createDossierRouter(store, socketService));
   app.use('/api/interview-prep', createInterviewPrepRouter(store, socketService));
+  app.use('/api/pathway', createPathwayRouter(store, socketService));
 
   return app;
 }

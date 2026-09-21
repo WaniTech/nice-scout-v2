@@ -45,6 +45,7 @@ Right now you can use the app to:
 - **Transfer Market Valuation & Club Mandates Engine**: Algorithmic player transfer valuation calculator and verified club recruitment mandates hub in `app/TransferMarket.tsx` featuring bracket ranges, growth timelines, listing status manager, and 1-click dossier pitching with WebSocket updates.
 - **Scout Intelligence Dossier & Export Hub**: Complete scout briefing generation suite in `app/ScoutDossier.tsx` aggregating multi-pillar ratings, FIFA medical clearances, GPS sprint benchmarks, and market valuation with multi-template PDF and JSON export dispatching.
 - **Scout Interview Prep & Trial Simulation Hub**: Full-stack trial briefing preparation and simulation studio in `app/ScoutInterviewHub.tsx` with scheduled club briefing trackers, tactical role explanation modules, interactive question drills with custom talking points, and mock trial simulation scoring.
+- **Career Pathway & Pro Development Roadmap Engine**: Algorithmic career trajectory simulator in `app/CareerPathway.tsx` featuring multi-stage progression roadmaps (Domestic Bridge, Challenger Starter, European Elite), quantitative KPI targets, milestone checkpoint audits, and benchmarked European incubator clubs.
 
 ## Work Hours
 

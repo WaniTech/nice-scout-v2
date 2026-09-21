@@ -539,6 +539,22 @@ export default function PlayerDashboard() {
         </TouchableOpacity>
       </View>
 
+      <View style={[styles.showcaseBanner, { backgroundColor: '#064E3B', borderColor: '#065F46' }]}>
+        <View style={[styles.showcaseBannerIcon, { backgroundColor: '#059669' }]}>
+          <Ionicons name="git-network-outline" size={20} color="#FFFFFF" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.showcaseBannerTitle}>Career Pathway Engine</Text>
+          <Text style={styles.showcaseBannerText}>
+            3-year pro trajectory, benchmarked clubs &amp; milestone targets.
+          </Text>
+        </View>
+        <TouchableOpacity style={[styles.showcaseBannerBtn, { backgroundColor: '#059669' }]} onPress={() => router.push('/CareerPathway' as never)}>
+          <Text style={styles.showcaseBannerBtnText}>Roadmap</Text>
+          <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.sectionHeader}>
         <View>
           <Text style={styles.sectionKicker}>Club matching</Text>

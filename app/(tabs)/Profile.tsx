@@ -405,6 +405,12 @@ export default function ProfilePage() {
           onPress={() => router.push('/Showcases' as never)}
         />
         <ProfileTool
+          icon="git-network-outline"
+          title="Career Pathway Engine"
+          description="3-year pro trajectory, benchmarked clubs & milestone targets."
+          onPress={() => router.push('/CareerPathway' as never)}
+        />
+        <ProfileTool
           icon="videocam-outline"
           title="Media room"
           description={`${readyClips} clips ready for club conversations and scout follow-ups.`}

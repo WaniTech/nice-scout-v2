@@ -14,6 +14,10 @@ import {
     Opportunity,
     OpportunityStage,
     PassportMetrics,
+    PathwayMilestone,
+    PathwayMilestoneStatus,
+    PathwayReport,
+    PathwayScenario,
     PillarScores,
     PitchSubmission,
     PlayerClip,
@@ -886,4 +890,37 @@ export function logInterviewSimulation(
       body: JSON.stringify(payload),
     }
   );
+}
+
+export function getPlayerPathwayReport(playerId: string) {
+  return request<PathwayReport>(`/pathway/${playerId}`);
+}
+
+export function updatePathwayMilestone(
+  playerId: string,
+  milestoneId: string,
+  payload: { status?: PathwayMilestoneStatus; notes?: string } = {}
+) {
+  return request<{ trajectoryRating: number; milestone: PathwayMilestone }>(
+    `/pathway/${playerId}/milestones/${milestoneId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+export function simulatePathwayScenario(
+  playerId: string,
+  payload: {
+    name?: string;
+    pathwayType?: string;
+    targetHorizonYears?: number;
+    customFocus?: string;
+  }
+) {
+  return request<PathwayScenario>(`/pathway/${playerId}/simulate`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
