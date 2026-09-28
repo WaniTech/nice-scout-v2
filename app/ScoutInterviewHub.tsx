@@ -36,7 +36,6 @@ export default function ScoutInterviewHubScreen() {
   const [simScore, setSimScore] = useState<string>('90');
   const [simFeedback, setSimFeedback] = useState<string>('');
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let active = true;
@@ -46,10 +45,7 @@ export default function ScoutInterviewHubScreen() {
           setReport(data);
         }
       })
-      .catch(() => undefined)
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
+      .catch(() => undefined);
 
     return () => {
       active = false;

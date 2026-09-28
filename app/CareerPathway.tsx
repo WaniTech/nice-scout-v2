@@ -48,7 +48,6 @@ export default function CareerPathwayScreen() {
   const [scenYears, setScenYears] = useState<string>('3');
   const [scenFocus, setScenFocus] = useState<string>('');
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let active = true;
@@ -58,10 +57,7 @@ export default function CareerPathwayScreen() {
           setReport(data);
         }
       })
-      .catch(() => undefined)
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
+      .catch(() => undefined);
 
     return () => {
       active = false;

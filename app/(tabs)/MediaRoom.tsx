@@ -1,31 +1,31 @@
 import {
-    colors,
-    defaultTelestrationReport,
-    mediaClips,
-    PlayerClip,
-    PlayerClipStatus,
-    VideoAnnotationReport,
+  colors,
+  defaultTelestrationReport,
+  mediaClips,
+  PlayerClip,
+  PlayerClipStatus,
+  VideoAnnotationReport,
 } from '@/constants/playerPlatform';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-    addVideoTelestration,
-    createPlayerClip,
-    deletePlayerClip,
-    deleteVideoAnnotation,
-    getPlayerClips,
-    getVideoAnnotations,
-    PlayerClipPayload,
-    updatePlayerClip,
+  addVideoTelestration,
+  createPlayerClip,
+  deletePlayerClip,
+  deleteVideoAnnotation,
+  getPlayerClips,
+  getVideoAnnotations,
+  PlayerClipPayload,
+  updatePlayerClip,
 } from '@/services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const statusOptions: PlayerClipStatus[] = ['Draft', 'Scout-ready', 'Sent'];
@@ -337,9 +337,31 @@ export default function MediaRoomPage() {
           </TouchableOpacity>
         </View>
 
-        {showAnnotationModal ? (
+        {showAnnotationModal ? ( 
           <View style={styles.annotationForm}>
             <Text style={styles.formSectionTitle}>Add Tactical Telestration Markup</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
+              {clips.map((c) => (
+                <TouchableOpacity
+                  key={c.id}
+                  style={[
+                    styles.filterChip,
+                    selectedClipForTelestration === c.id && styles.filterChipActive,
+                    { marginRight: 6 },
+                  ]}
+                  onPress={() => setSelectedClipForTelestration(c.id)}
+                >
+                  <Text
+                    style={[
+                      styles.filterText,
+                      selectedClipForTelestration === c.id && styles.filterTextActive,
+                    ]}
+                  >
+                    {c.title.length > 20 ? `${c.title.slice(0, 18)}...` : c.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
             <TextInput
               style={styles.formInput}
               placeholder="Markup Title (e.g. 1v1 Burst & Delivery)"
